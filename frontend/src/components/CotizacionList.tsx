@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Edit2, Trash2, Download, FileText, Mail, X } from 'lucide-react';
+import { Eye, Edit2, Trash2, Download, FileText, Mail } from 'lucide-react';
 import type { Cotizacion } from '../types';
 import { formatCurrency, formatDate } from '../utils/helpers';
 
