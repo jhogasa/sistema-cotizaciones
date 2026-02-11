@@ -1,0 +1,33 @@
+# Dependencias
+node_modules/
+
+# Producción
+dist/
+build/
+
+# Archivos de entorno sensibles
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Backend - Base de datos
+*.db
+*.sqlite
+
+# Backend - Uploads (si los hay)
+uploads/
