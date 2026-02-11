@@ -5,7 +5,8 @@ import {
   obtenerCotizacionPorId,
   actualizarCotizacion,
   eliminarCotizacion,
-  obtenerSiguienteNumero
+  obtenerSiguienteNumero,
+  enviarCotizacion
 } from '../controllers/cotizacionController.js';
 import { Cotizacion, Item } from '../models/index.js';
 import { generarPDFCotizacion } from '../services/pdfService.js';
@@ -16,6 +17,7 @@ const router = express.Router();
 router.post('/', crearCotizacion);
 router.get('/', obtenerCotizaciones);
 router.get('/siguiente-numero', obtenerSiguienteNumero);
+router.post('/:id/enviar', enviarCotizacion);
 router.get('/:id', obtenerCotizacionPorId);
 router.put('/:id', actualizarCotizacion);
 router.delete('/:id', eliminarCotizacion);

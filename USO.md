@@ -42,14 +42,7 @@ Luego abrir: http://localhost:5173
 ### 2. Datos del Cliente (ejemplo)
 
 ```
-Nombre/Razón Social: MULTISERVICIOS LA GRAN VIA S.A
-NIT: 806.003.158-2
-Dirección: VARIANTE MAMONAL GAMBOTE KM 1
-Sitio Web: www.edslagranvia.com
-Contacto: Farid John Garcia
-Email: direccion@edslagranvia.com
-Teléfono: 3147088615
-```
+
 
 ### 3. Información de la Cotización
 
@@ -154,6 +147,23 @@ Descuento: 0%
 2. El PDF se descarga automáticamente
 3. Formato: `cotizacion_00001_NOMBRE_CLIENTE.pdf`
 
+### Enviar por Email
+1. En la lista, busca una cotización en estado **Borrador**
+2. Click en el ícono ✉️ (email)
+3. Confirma el envío
+4. El email se envía automáticamente al cliente con:
+   - PDF adjunto de la cotización
+   - Plantilla HTML profesional
+5. El estado cambia automáticamente a **Enviada**
+
+**Requisitos previos:**
+- Configurar credenciales de email en `.env`:
+  ```
+  EMAIL_USER=jgs.tecnologias@gmail.com
+  EMAIL_PASSWORD=tu-password-de-app
+  ```
+- Para Gmail, usar [App Password](https://myaccount.google.com/apppasswords)
+
 ### Buscar Cotizaciones
 1. Usar la barra de búsqueda superior
 2. Buscar por:
@@ -228,8 +238,10 @@ Editar: `frontend/src/components/CotizacionForm.tsx`
 4. **Agregar items** de productos/servicios
 5. **Revisar totales** calculados automáticamente
 6. **Guardar cotización** (recibe número automático)
-7. **Descargar PDF** para enviar al cliente
-8. **Actualizar estado** si es necesario (borrador → enviada → aceptada)
+7. **Enviar por email** directamente desde el sistema (opción ✉️)
+   - El PDF se genera y envía automáticamente
+   - El estado cambia a "Enviada"
+8. **Actualizar estado** manualmente si es necesario (borrador → enviada → aceptada)
 9. **Consultar histórico** cuando se requiera
 
 ---
@@ -283,6 +295,13 @@ Después de crear una cotización, verificar:
 - [ ] Formato del PDF es profesional
 - [ ] Se puede editar la cotización
 - [ ] Se puede eliminar la cotización
+
+**Para envío por email:**
+- [ ] Credenciales de email configuradas en `.env`
+- [ ] El botón de email aparece para cotizaciones en borrador
+- [ ] El email se envía correctamente
+- [ ] El estado cambia a "Enviada" después del envío
+- [ ] El cliente recibe el PDF adjunto
 
 ---
 

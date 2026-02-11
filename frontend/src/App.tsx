@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
+import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
 import CotizacionList from './components/CotizacionList';
 import CotizacionView from './components/CotizacionView';
@@ -27,7 +28,7 @@ function App() {
       setCotizaciones(response.data);
     } catch (error) {
       console.error('Error al cargar cotizaciones:', error);
-      alert('Error al cargar las cotizaciones');
+      toast.error('Error al cargar las cotizaciones');
     } finally {
       setIsLoading(false);
     }
@@ -39,10 +40,10 @@ function App() {
       await cotizacionesApi.create(data);
       await cargarCotizaciones();
       setView('list');
-      alert('Cotización creada exitosamente');
+      toast.success('Cotización creada exitosamente');
     } catch (error) {
       console.error('Error al crear cotización:', error);
-      alert('Error al crear la cotización');
+      toast.error('Error al crear la cotización');
     } finally {
       setIsLoading(false);
     }
@@ -57,10 +58,10 @@ function App() {
       await cargarCotizaciones();
       setView('list');
       setCotizacionActual(undefined);
-      alert('Cotización actualizada exitosamente');
+      toast.success('Cotización actualizada exitosamente');
     } catch (error) {
       console.error('Error al actualizar cotización:', error);
-      alert('Error al actualizar la cotización');
+      toast.error('Error al actualizar la cotización');
     } finally {
       setIsLoading(false);
     }
@@ -71,10 +72,10 @@ function App() {
       setIsLoading(true);
       await cotizacionesApi.delete(id);
       await cargarCotizaciones();
-      alert('Cotización eliminada exitosamente');
+      toast.success('Cotización eliminada exitosamente');
     } catch (error) {
       console.error('Error al eliminar cotización:', error);
-      alert('Error al eliminar la cotización');
+      toast.error('Error al eliminar la cotización');
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +88,7 @@ function App() {
       setView('view');
     } catch (error) {
       console.error('Error al cargar cotización:', error);
-      alert('Error al cargar la cotización');
+      toast.error('Error al cargar la cotización');
     }
   };
 
@@ -98,7 +99,7 @@ function App() {
       setView('edit');
     } catch (error) {
       console.error('Error al cargar cotización:', error);
-      alert('Error al cargar la cotización');
+      toast.error('Error al cargar la cotización');
     }
   };
 
@@ -108,9 +109,24 @@ function App() {
       const cotizacion = cotizaciones.find(c => c.id === id);
       const filename = `cotizacion_${cotizacion?.numero_cotizacion}_${clienteNombre.replace(/\s+/g, '_')}.pdf`;
       downloadBlob(blob, filename);
+      toast.success('PDF descargado correctamente');
     } catch (error) {
       console.error('Error al descargar PDF:', error);
-      alert('Error al descargar el PDF');
+      toast.error('Error al descargar el PDF');
+    }
+  };
+
+  const handleSendEmail = async (id: number) => {
+    try {
+      setIsLoading(true);
+      await cotizacionesApi.sendEmail(id);
+      await cargarCotizaciones();
+      toast.success('Cotización enviada exitosamente por email');
+    } catch (error) {
+      console.error('Error al enviar email:', error);
+      toast.error('Error al enviar la cotización por email');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -122,6 +138,33 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-100">
+      {/* Toast Notifications */}
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#fff',
+            color: '#333',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+            borderRadius: '10px',
+            padding: '16px',
+          },
+          success: {
+            iconTheme: {
+              primary: '#059669',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#dc2626',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+
       {/* Header */}
       <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -181,6 +224,7 @@ function App() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onDownloadPDF={handleDownloadPDF}
+              onSendEmail={handleSendEmail}
               isLoading={isLoading}
             />
           </div>

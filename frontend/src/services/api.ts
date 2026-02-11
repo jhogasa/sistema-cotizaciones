@@ -59,6 +59,12 @@ export const cotizacionesApi = {
     });
     return response.data;
   },
+
+  // Enviar cotización por email
+  sendEmail: async (id: number): Promise<ApiResponse<any>> => {
+    const response = await api.post<ApiResponse<any>>(`/cotizaciones/${id}/enviar`);
+    return response.data;
+  },
 };
 
 export default api;

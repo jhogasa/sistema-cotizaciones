@@ -1,6 +1,8 @@
 import { Cotizacion, Item } from '../models/index.js';
 import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
+import { enviarCotizacionEmail } from '../services/emailService.js';
+import { generarPDFCotizacionBuffer } from '../services/pdfService.js';
 
 // Generar número de cotización consecutivo
 const generarNumeroCotizacion = async () => {
@@ -124,7 +126,7 @@ export const obtenerCotizaciones = async (req, res) => {
         as: 'items',
         order: [['orden', 'ASC']]
       }],
-      order: [['created_at', 'DESC']],
+      order: [['numero_cotizacion', 'ASC']],
       limit: parseInt(limit),
       offset: parseInt(offset)
     });
@@ -291,6 +293,67 @@ export const obtenerSiguienteNumero = async (req, res) => {
     console.error('Error al obtener siguiente número:', error);
     res.status(500).json({
       error: 'Error al obtener el siguiente número',
+      details: error.message
+    });
+  }
+};
+
+// Enviar cotización por email
+export const enviarCotizacion = async (req, res) => {
+  const transaction = await sequelize.transaction();
+  
+  try {
+    const { id } = req.params;
+
+    // Obtener cotización con sus items
+    const cotizacion = await Cotizacion.findByPk(id, {
+      include: [{
+        model: Item,
+        as: 'items',
+        order: [['orden', 'ASC']]
+      }]
+    });
+
+    if (!cotizacion) {
+      return res.status(404).json({
+        error: 'Cotización no encontrada'
+      });
+    }
+
+    // Verificar que no esté aceptada, rechazada o anulada
+    if (cotizacion.estado === 'aceptada' || cotizacion.estado === 'rechazada' || cotizacion.estado === 'anulada') {
+      return res.status(400).json({
+        error: `No se puede enviar una cotización en estado '${cotizacion.estado}'`
+      });
+    }
+
+    // Generar PDF y obtener buffer
+    const pdfBuffer = await generarPDFCotizacionBuffer(cotizacion.toJSON());
+
+    // Enviar email
+    await enviarCotizacionEmail(cotizacion.toJSON(), pdfBuffer);
+
+    // Actualizar estado a 'enviada' solo si estaba en borrador
+    const nuevoEstado = cotizacion.estado === 'borrador' ? 'enviada' : cotizacion.estado;
+    await cotizacion.update({ estado: nuevoEstado }, { transaction });
+
+    await transaction.commit();
+
+    res.json({
+      message: cotizacion.estado === 'borrador' ? 'Cotización enviada exitosamente por email' : 'Cotización reenviada exitosamente por email',
+      data: {
+        cotizacion_id: cotizacion.id,
+        numero_cotizacion: cotizacion.numero_cotizacion,
+        destinatario: cotizacion.cliente_email,
+        estado: nuevoEstado
+      }
+    });
+
+  } catch (error) {
+    await transaction.rollback();
+    console.error('Error al enviar cotización:', error);
+    res.status(500).json({
+      error: 'Error al enviar la cotización por email',
       details: error.message
     });
   }
