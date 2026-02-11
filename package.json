@@ -1,4 +1,18 @@
 {
+  "name": "sistema-cotizaciones",
+  "version": "1.0.0",
+  "description": "Sistema de Cotizaciones - JGS Soluciones Tecnológicas",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "start": "npm run start:backend & npm run start:frontend",
+    "start:backend": "cd backend && npm start",
+    "start:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "init-db": "cd backend && npm run init-db"
+  },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
     "vite": "^7.3.1"
