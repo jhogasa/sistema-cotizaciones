@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Search } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
