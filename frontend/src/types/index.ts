@@ -75,3 +75,34 @@ export interface PaginatedResponse<T> {
     pages: number;
   };
 }
+
+// Auth types
+export interface Usuario {
+  id: number;
+  nombre: string;
+  email: string;
+  rol: 'admin' | 'usuario';
+  activo: boolean;
+  ultimo_login?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  message: string;
+  data: {
+    token: string;
+    usuario: Usuario;
+  };
+}
+
+export interface AuthState {
+  usuario: Usuario | null;
+  token: string | null;
+  isAuthenticated: boolean;
+}

@@ -1,6 +1,7 @@
 import sequelize from '../config/database.js';
 import Cotizacion from './Cotizacion.js';
 import Item from './Item.js';
+import Usuario from './Usuario.js';
 
 // Sincronizar modelos con la base de datos
 export const syncDatabase = async (force = false) => {
@@ -15,5 +16,6 @@ export const syncDatabase = async (force = false) => {
 
 export {
   Cotizacion,
-  Item
+  Item,
+  Usuario
 };

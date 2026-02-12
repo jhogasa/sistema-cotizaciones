@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Cotizacion, CotizacionFormData, ApiResponse, PaginatedResponse } from '../types';
+import type { Cotizacion, CotizacionFormData, ApiResponse, PaginatedResponse, LoginRequest, LoginResponse, Usuario } from '../types';
 
 // Forma correcta de acceder a variables de entorno en Vite
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -10,6 +10,66 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Interceptor to add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Interceptor to handle 401 responses
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('usuario');
+      // Dispatch custom event for auth state change
+      window.dispatchEvent(new Event('auth-logout'));
+    }
+    return Promise.reject(error);
+  }
+);
+
+// Auth API
+export const authApi = {
+  login: async (credentials: LoginRequest): Promise<LoginResponse> => {
+    const response = await api.post<LoginResponse>('/auth/login', credentials);
+    return response.data;
+  },
+
+  getProfile: async (): Promise<Usuario> => {
+    const response = await api.get<{ data: Usuario }>('/auth/me');
+    return response.data.data;
+  },
+
+  cambiarPassword: async (passwordActual: string, passwordNuevo: string): Promise<void> => {
+    await api.put('/auth/cambiar-password', { passwordActual, passwordNuevo });
+  },
+
+  // Admin: User management
+  getUsuarios: async (): Promise<Usuario[]> => {
+    const response = await api.get<{ data: Usuario[] }>('/auth/usuarios');
+    return response.data.data;
+  },
+
+  crearUsuario: async (data: { nombre: string; email: string; password: string; rol?: string }): Promise<Usuario> => {
+    const response = await api.post<{ data: Usuario }>('/auth/usuarios', data);
+    return response.data.data;
+  },
+
+  actualizarUsuario: async (id: number, data: Partial<{ nombre: string; email: string; rol: string; activo: boolean; password: string }>): Promise<Usuario> => {
+    const response = await api.put<{ data: Usuario }>(`/auth/usuarios/${id}`, data);
+    return response.data.data;
+  },
+
+  eliminarUsuario: async (id: number): Promise<void> => {
+    await api.delete(`/auth/usuarios/${id}`);
+  },
+};
 
 export const cotizacionesApi = {
   // Obtener todas las cotizaciones

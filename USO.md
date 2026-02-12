@@ -1,21 +1,27 @@
-# 🎯 GUÍA DE USO RÁPIDO
-## Sistema de Cotizaciones
+# 🎯 GUÍA DE USO
+## Sistema de Cotizaciones v1.0.0
 
 ---
 
 ## 🚀 INICIO RÁPIDO
 
-### Opción 1: Scripts automatizados
+### Opción 1: Script automatizado (Windows)
 
-**Linux/Mac:**
-```bash
-./start.sh
+```
+Start_Sistema_Cotizaciones.bat
 ```
 
-**Windows:**
-```
-start.bat
-```
+> **Características del script:**
+> - Inicia Backend y Frontend en ventanas separadas
+> - Las ventanas de consola permanecen abiertas (ver logs en tiempo real)
+> - Verifica Node.js antes de iniciar
+> - Muestra URLs de acceso
+
+### Cierre del Sistema
+
+Para cerrar el sistema:
+1. Cerrar las ventanas de consola del Backend y Frontend
+2. Opcionalmente detener PostgreSQL si no se necesita
 
 ### Opción 2: Manual
 
@@ -271,6 +277,55 @@ DELETE FROM cotizaciones WHERE created_at < NOW() - INTERVAL '1 year';
 
 ---
 
+## 🔐 SISTEMA DE AUTENTICACIÓN
+
+### Inicio de Sesión
+
+El sistema requiere autenticación para acceder. Al iniciar la aplicación, se muestra la pantalla de login.
+
+**Credenciales por defecto:**
+```
+Usuario: admin@jgs.com
+Password: admin123
+```
+
+> ⚠️ **Importante:** Cambia la contraseña después del primer inicio de sesión.
+
+### Gestión de Usuarios (Solo Administradores)
+
+Los usuarios con rol **admin** pueden gestionar otros usuarios:
+
+1. Click en el ícono 👥 (usuarios) en la barra superior
+2. Desde aquí puedes:
+   - **Ver lista** de todos los usuarios
+   - **Crear** nuevos usuarios
+   - **Editar** usuarios existentes
+   - **Activar/Desactivar** usuarios
+   - **Eliminar** usuarios
+
+### Roles de Usuario
+
+| Rol | Permisos |
+|-----|----------|
+| **admin** | Acceso total: gestión de usuarios, todas las cotizaciones |
+| **usuario** | Crear, editar, ver y eliminar solo sus propias cotizaciones |
+
+### Cambio de Contraseña
+
+1. Click en el ícono 🔑 (llave) en la barra superior
+2. Ingresa tu contraseña actual
+3. Ingresa y confirma tu nueva contraseña
+4. Click en "Actualizar Contraseña"
+
+### Seguridad
+
+- Las contraseñas se almacenan cifradas con bcrypt
+- El sistema usa tokens JWT para autenticación
+- Las sesiones expiran después de 24 horas
+- El token se renueva automáticamente al mantener actividad
+
+---
+
 ## 📞 SOPORTE
 
 Para problemas técnicos:
@@ -302,6 +357,13 @@ Después de crear una cotización, verificar:
 - [ ] El email se envía correctamente
 - [ ] El estado cambia a "Enviada" después del envío
 - [ ] El cliente recibe el PDF adjunto
+
+**Para autenticación:**
+- [ ] Login con credenciales correctas (admin@jgs.com / admin123)
+- [ ] Cambio de contraseña funciona correctamente
+- [ ] Admin puede acceder a gestión de usuarios
+- [ ] Usuario no admin no ve opciones de administración
+- [ ] Logout cierra la sesión correctamente
 
 ---
 

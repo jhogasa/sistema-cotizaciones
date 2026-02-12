@@ -6,7 +6,7 @@ const createTransporter = () => {
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com',
-      pass: process.env.EMAIL_PASSWORD || 'tu-password-de-app'
+      pass: process.env.EMAIL_PASSWORD
     }
   });
 };

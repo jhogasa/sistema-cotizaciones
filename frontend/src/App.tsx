@@ -1,25 +1,68 @@
-import { useState, useEffect } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { Plus, Search, LogOut, Users, Shield, Key } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
 import CotizacionList from './components/CotizacionList';
 import CotizacionView from './components/CotizacionView';
-import { cotizacionesApi } from './services/api';
-import type { Cotizacion, CotizacionFormData } from './types';
+import LoginForm from './components/LoginForm';
+import UserManagement from './components/UserManagement';
+import { cotizacionesApi, authApi } from './services/api';
+import type { Cotizacion, CotizacionFormData, Usuario } from './types';
 import { downloadBlob } from './utils/helpers';
 
-type View = 'list' | 'create' | 'edit' | 'view';
+type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password';
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [view, setView] = useState<View>('list');
   const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>([]);
   const [cotizacionActual, setCotizacionActual] = useState<Cotizacion | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  useEffect(() => {
-    cargarCotizaciones();
+  // Change password state
+  const [passwordActual, setPasswordActual] = useState('');
+  const [passwordNuevo, setPasswordNuevo] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  const handleLogout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('usuario');
+    setIsAuthenticated(false);
+    setUsuario(null);
+    setView('list');
+    setCotizaciones([]);
   }, []);
+
+  // Limpiar localStorage al cargar la app para forzar login
+  useEffect(() => {
+    // Forzar logout al cargar para siempre mostrar login
+    handleLogout();
+  }, [handleLogout]);
+
+  // Listen for auth-logout events (from API interceptor)
+  useEffect(() => {
+    const handleAuthLogout = () => {
+      handleLogout();
+      toast.error('Su sesión ha expirado, por favor inicie sesión nuevamente');
+    };
+
+    window.addEventListener('auth-logout', handleAuthLogout);
+    return () => window.removeEventListener('auth-logout', handleAuthLogout);
+  }, [handleLogout]);
+
+  // Load cotizaciones when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      cargarCotizaciones();
+    }
+  }, [isAuthenticated]);
+
+  const handleLoginSuccess = (user: Usuario, _token: string) => {
+    setUsuario(user);
+    setIsAuthenticated(true);
+  };
 
   const cargarCotizaciones = async () => {
     try {
@@ -130,11 +173,62 @@ function App() {
     }
   };
 
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (passwordNuevo !== passwordConfirm) {
+      toast.error('Las contraseñas no coinciden');
+      return;
+    }
+
+    if (passwordNuevo.length < 6) {
+      toast.error('La nueva contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await authApi.cambiarPassword(passwordActual, passwordNuevo);
+      toast.success('Contraseña actualizada exitosamente');
+      setPasswordActual('');
+      setPasswordNuevo('');
+      setPasswordConfirm('');
+      setView('list');
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Error al cambiar contraseña';
+      toast.error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const cotizacionesFiltradas = cotizaciones.filter(c =>
     c.numero_cotizacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.cliente_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.cliente_nit.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Show login if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#fff',
+              color: '#333',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+              borderRadius: '10px',
+              padding: '16px',
+            },
+          }}
+        />
+        <LoginForm onLoginSuccess={handleLoginSuccess} />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-slate-100">
@@ -169,7 +263,7 @@ function App() {
       <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('list')}>
               {/* Logo JGS */}
               <img 
                 src="/logo-jgs.jpg" 
@@ -184,6 +278,48 @@ function App() {
                   JGS Soluciones Tecnológicas
                 </p>
               </div>
+            </div>
+
+            {/* User Menu */}
+            <div className="flex items-center gap-3">
+              <div className="hidden sm:flex items-center gap-2 text-sm text-slate-600">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  usuario?.rol === 'admin' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {usuario?.rol === 'admin' ? <Shield className="w-4 h-4" /> : <span className="font-medium">{usuario?.nombre?.charAt(0)}</span>}
+                </div>
+                <span className="font-medium">{usuario?.nombre}</span>
+              </div>
+
+              {/* Change Password */}
+              <button
+                onClick={() => setView('change-password')}
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                title="Cambiar contraseña"
+              >
+                <Key className="w-5 h-5" />
+              </button>
+
+              {/* Admin: User Management */}
+              {usuario?.rol === 'admin' && (
+                <button
+                  onClick={() => setView('users')}
+                  className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
+                  title="Gestión de usuarios"
+                >
+                  <Users className="w-5 h-5" />
+                </button>
+              )}
+
+              {/* Logout */}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Salir</span>
+              </button>
             </div>
           </div>
         </div>
@@ -259,6 +395,83 @@ function App() {
             }}
             onDownloadPDF={() => handleDownloadPDF(cotizacionActual.id!, cotizacionActual.cliente_nombre)}
           />
+        )}
+
+        {view === 'users' && usuario && (
+          <UserManagement
+            currentUser={usuario}
+            onBack={() => setView('list')}
+          />
+        )}
+
+        {view === 'change-password' && (
+          <div className="max-w-md mx-auto">
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Key className="w-5 h-5 text-primary-800" />
+                <h2 className="text-xl font-semibold text-slate-900">Cambiar Contraseña</h2>
+              </div>
+
+              <form onSubmit={handleChangePassword} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Contraseña actual</label>
+                  <input
+                    type="password"
+                    value={passwordActual}
+                    onChange={(e) => setPasswordActual(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-800 focus:border-transparent"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nueva contraseña</label>
+                  <input
+                    type="password"
+                    value={passwordNuevo}
+                    onChange={(e) => setPasswordNuevo(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-800 focus:border-transparent"
+                    required
+                    minLength={6}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Confirmar nueva contraseña</label>
+                  <input
+                    type="password"
+                    value={passwordConfirm}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-800 focus:border-transparent"
+                    required
+                    minLength={6}
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPasswordActual('');
+                      setPasswordNuevo('');
+                      setPasswordConfirm('');
+                      setView('list');
+                    }}
+                    className="px-4 py-2 border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="flex items-center gap-2 bg-primary-800 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-all disabled:opacity-50"
+                  >
+                    Actualizar Contraseña
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </main>
 

@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import { testConnection } from './config/database.js';
 import { syncDatabase } from './models/index.js';
 import cotizacionesRoutes from './routes/cotizaciones.js';
+import authRoutes from './routes/auth.js';
+import { authMiddleware } from './middleware/auth.js';
 
 dotenv.config();
 
@@ -27,6 +29,7 @@ app.get('/', (req, res) => {
     message: 'API de Cotizaciones - JGS Soluciones Tecnológicas',
     version: '1.0.0',
     endpoints: {
+      auth: '/api/auth',
       cotizaciones: '/api/cotizaciones',
       health: '/health'
     }
@@ -40,7 +43,11 @@ app.get('/health', (req, res) => {
   });
 });
 
-app.use('/api/cotizaciones', cotizacionesRoutes);
+// Auth routes (public login, protected profile/users)
+app.use('/api/auth', authRoutes);
+
+// Protected routes - require authentication
+app.use('/api/cotizaciones', authMiddleware, cotizacionesRoutes);
 
 // Manejo de errores 404
 app.use((req, res) => {
@@ -78,6 +85,7 @@ const iniciarServidor = async () => {
       console.log(`\n🚀 Servidor corriendo en http://localhost:${PORT}`);
       console.log(`📊 Ambiente: ${process.env.NODE_ENV || 'development'}`);
       console.log(`📁 Base de datos: ${process.env.DB_NAME}`);
+      console.log(`🔐 Autenticación JWT habilitada`);
       console.log('\n✅ Sistema listo para recibir peticiones\n');
     });
 
