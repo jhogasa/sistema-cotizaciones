@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, LogOut, Users, Shield, Key, Building, FileText, ArrowLeft } from 'lucide-react';
+import { Plus, Search, LogOut, Users, Shield, Key, Building, FileText } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
 import CotizacionList from './components/CotizacionList';
