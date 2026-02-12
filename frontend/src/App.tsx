@@ -1,16 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, LogOut, Users, Shield, Key } from 'lucide-react';
+import { Plus, Search, LogOut, Users, Shield, Key, Building, FileText, ArrowLeft } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
 import CotizacionList from './components/CotizacionList';
 import CotizacionView from './components/CotizacionView';
 import LoginForm from './components/LoginForm';
 import UserManagement from './components/UserManagement';
+import ClienteList from './components/ClienteList';
+import ClienteForm from './components/ClienteForm';
 import { cotizacionesApi, authApi } from './services/api';
-import type { Cotizacion, CotizacionFormData, Usuario } from './types';
+import type { Cotizacion, CotizacionFormData, Usuario, ClienteFormData } from './types';
 import { downloadBlob } from './utils/helpers';
 
-type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password';
+type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password' | 'clientes-list' | 'clientes-create' | 'clientes-edit';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -20,6 +22,10 @@ function App() {
   const [cotizacionActual, setCotizacionActual] = useState<Cotizacion | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // CRM State
+  const [clienteActual, setClienteActual] = useState<ClienteFormData | undefined>();
+  const [currentSection, setCurrentSection] = useState<'cotizaciones' | 'clientes'>('cotizaciones');
 
   // Change password state
   const [passwordActual, setPasswordActual] = useState('');
@@ -202,6 +208,28 @@ function App() {
     }
   };
 
+  // ============ CRM ============
+
+  const handleSelectCliente = (cliente: ClienteFormData) => {
+    setClienteActual(cliente);
+    setView('clientes-edit');
+  };
+
+  const handleClienteSaved = () => {
+    setClienteActual(undefined);
+    setView('clientes-list');
+  };
+
+  const handleNavigateToClientes = () => {
+    setCurrentSection('clientes');
+    setView('clientes-list');
+  };
+
+  const handleNavigateToCotizaciones = () => {
+    setCurrentSection('cotizaciones');
+    setView('list');
+  };
+
   const cotizacionesFiltradas = cotizaciones.filter(c =>
     c.numero_cotizacion.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.cliente_nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -263,7 +291,7 @@ function App() {
       <header className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('list')}>
+            <div className="flex items-center gap-3 cursor-pointer" onClick={handleNavigateToCotizaciones}>
               {/* Logo JGS */}
               <img 
                 src="/logo-jgs.jpg" 
@@ -279,6 +307,32 @@ function App() {
                 </p>
               </div>
             </div>
+
+            {/* Navigation Menu */}
+            <nav className="hidden md:flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+              <button
+                onClick={handleNavigateToCotizaciones}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  currentSection === 'cotizaciones' 
+                    ? 'bg-white text-primary-800 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <FileText className="w-4 h-4" />
+                <span className="font-medium">Cotizaciones</span>
+              </button>
+              <button
+                onClick={handleNavigateToClientes}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  currentSection === 'clientes' 
+                    ? 'bg-white text-primary-800 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Building className="w-4 h-4" />
+                <span className="font-medium">Clientes</span>
+              </button>
+            </nav>
 
             {/* User Menu */}
             <div className="flex items-center gap-3">
@@ -371,6 +425,7 @@ function App() {
             onSubmit={handleCreate}
             onCancel={() => setView('list')}
             isLoading={isLoading}
+            onNavigateToClientes={() => setView('clientes-create')}
           />
         )}
 
@@ -472,6 +527,31 @@ function App() {
               </form>
             </div>
           </div>
+        )}
+
+        {/* ============ VISTAS CRM ============ */}
+
+        {view === 'clientes-list' && (
+          <ClienteList
+            onBack={handleNavigateToCotizaciones}
+            onSelectCliente={handleSelectCliente}
+            onCreate={() => setView('clientes-create')}
+          />
+        )}
+
+        {view === 'clientes-edit' && clienteActual && (
+          <ClienteForm
+            cliente={clienteActual}
+            onBack={() => setView('clientes-list')}
+            onSaved={handleClienteSaved}
+          />
+        )}
+
+        {view === 'clientes-create' && (
+          <ClienteForm
+            onBack={() => setView('clientes-list')}
+            onSaved={handleClienteSaved}
+          />
         )}
       </main>
 

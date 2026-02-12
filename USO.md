@@ -1,5 +1,5 @@
 # 🎯 GUÍA DE USO
-## Sistema de Cotizaciones v1.0.0
+## Sistema de Cotizaciones y CRM v2.0.0
 
 ---
 
@@ -277,6 +277,166 @@ DELETE FROM cotizaciones WHERE created_at < NOW() - INTERVAL '1 year';
 
 ---
 
+## 📊 MÓDULO DE GESTIÓN DE CLIENTES (CRM)
+
+El sistema ahora incluye un módulo completo de CRM para gestionar tus clientes de manera eficiente.
+
+### 📋 Estructura del CRM
+
+El CRM te permite organizar toda la información de tus clientes en un solo lugar:
+
+| Módulo | Descripción |
+|--------|-------------|
+| **Ficha del Cliente** | Datos principales: nombre, NIT, contacto, dirección |
+| **Contactos** | Múltiples contactos por empresa |
+| **Interacciones** | Historial de llamadas, emails, visitas, notas |
+| **Cotizaciones** | Ver cotizaciones asociadas directamente |
+| **Documentos** | Adjuntar RUT, cámara de comercio, contratos |
+
+---
+
+### 🏢 CREAR UN NUEVO CLIENTE
+
+#### 1. Acceder al módulo de Clientes
+1. Click en "Clientes" en el menú lateral
+2. Click en "Nuevo Cliente"
+
+#### 2. Datos Principales
+```
+Tipo de cliente: [Persona] o [Empresa]
+Nombre completo: Juan Pérez García
+NIT / CC: 12345678-9
+Teléfono: 300 123 4567
+Email: juan@empresa.com
+Dirección: Calle 123 #45-67
+Ciudad: Bogotá
+Departamento: Cundinamarca
+Página Web: www.empresa.com (opcional)
+```
+
+#### 3. Clasificación
+```
+Estado: Prospecto | Activo | Inactivo | Moroso
+Sector: Comercio | Hotel | Salud | Puerto | Otro
+Prioridad: Alta | Media | Baja
+Tamaño: Pequeño | Mediano | Grande
+```
+
+#### 4. Click en "Guardar"
+
+---
+
+### 👥 GESTIÓN DE CONTACTOS
+
+Si el cliente es una empresa, puedes agregar múltiples contactos:
+
+#### Agregar Contacto
+1. En la ficha del cliente, ir a la pestaña "Contactos"
+2. Click en "Agregar Contacto"
+3. Llenar datos:
+```
+Nombre: María González
+Cargo: Gerente de Compras
+Teléfono: 310 987 6543
+Email: maria@empresa.com
+✓ Es contacto principal
+```
+
+#### Contactos Múltiples
+- Cada empresa puede tener varios contactos
+- Un contacto puede ser marcado como "principal"
+- Útil para empresas grandes con diferentes áreas
+
+---
+
+### 📞 HISTORIAL DE INTERACCIONES
+
+Registra todas las comunicaciones con tus clientes:
+
+#### Tipos de Interacción
+| Tipo | Icono | Uso |
+|------|-------|-----|
+| Llamada | 📞 | Seguimientos telefónicos |
+| WhatsApp | 💬 | Mensajes de WhatsApp |
+| Email | ✉️ | Correos electrónicos |
+| Visita | 🏢 | Visitas comerciales |
+| Reunión | 🤝 | Reuniones presenciales |
+| Nota | 📝 | Notas internas |
+
+#### Registrar una Interacción
+1. En la ficha del cliente, ir a "Interacciones"
+2. Click en "Nueva Interacción"
+3. Seleccionar tipo y describir:
+```
+Tipo: [Llamada]
+Descripción: Cliente interesado en cotización de cámaras.
+Quedó de revisar presupuesto y responder el viernes.
+Resultado: Positivo - Interesado
+```
+
+#### Ver Historial
+- Todas las interacciones se registran cronológicamente
+- Puedes filtrar por tipo de interacción
+- Ideal para hacer seguimiento del proceso de venta
+
+---
+
+### 🔗 COTIZACIONES ASOCIADAS
+
+En la ficha del cliente verás todas las cotizaciones feitas:
+
+| Número | Fecha | Valor | Estado |
+|--------|-------|-------|--------|
+| 00001 | 15/01/2024 | $3.953.099 | Enviada |
+| 00002 | 20/01/2024 | $1.200.000 | Aceptada |
+
+Desde aquí puedes:
+- Ver detalles de cada cotización
+- Crear nueva cotización rápidamente
+- Ver estado de cada cotización
+
+---
+
+### 📁 DOCUMENTOS
+
+Guarda documentos importantes de cada cliente:
+
+#### Tipos de Documentos
+- **RUT** - Registro Único Tributario
+- **Cámara de Comercio** - Certificado de existencia
+- **Contratos** - Contratos firmados
+- **Cédula** - Documento de identidad
+- **Certificados** - Certificaciones varias
+- **Otro** - Otros documentos
+
+#### Subir Documento
+1. En la ficha del cliente, ir a "Documentos"
+2. Click en "Subir Documento"
+3. Seleccionar tipo y archivo
+4. El documento queda asociado al cliente
+
+---
+
+### 🔍 FILTROS Y BÚSQUEDA
+
+#### Buscar Clientes
+1. Usar la barra de búsqueda superior
+2. Buscar por:
+   - Nombre del cliente
+   - NIT / CC
+   - Email
+   - Teléfono
+
+#### Filtros Avanzados
+| Filtro | Opciones |
+|--------|---------|
+| Estado | Prospecto, Activo, Inactivo, Moroso |
+| Sector | Comercio, Hotel, Salud, Puerto, Otro |
+| Prioridad | Alta, Media, Baja |
+| Tipo | Persona, Empresa |
+
+---
+
 ## 🔐 SISTEMA DE AUTENTICACIÓN
 
 ### Inicio de Sesión
@@ -364,6 +524,17 @@ Después de crear una cotización, verificar:
 - [ ] Admin puede acceder a gestión de usuarios
 - [ ] Usuario no admin no ve opciones de administración
 - [ ] Logout cierra la sesión correctamente
+
+**Para CRM - Gestión de Clientes:**
+- [ ] Se puede crear un nuevo cliente
+- [ ] Se puede editar información del cliente
+- [ ] Se puede eliminar un cliente
+- [ ] Se pueden agregar múltiples contactos por empresa
+- [ ] Se pueden registrar interacciones (llamadas, emails, visitas)
+- [ ] El historial de interacciones se guarda correctamente
+- [ ] Se pueden ver cotizaciones asociadas al cliente
+- [ ] Los filtros funcionan correctamente (estado, sector, prioridad)
+- [ ] La búsqueda por nombre/NIT/email funciona
 
 ---
 

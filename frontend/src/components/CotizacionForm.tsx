@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, ArrowLeft } from 'lucide-react';
-import type { Cotizacion, Item, CotizacionFormData } from '../types';
+import type { Cotizacion, Item, CotizacionFormData, Cliente } from '../types';
 import { calcularTotalItem, calcularTotalesCotizacion } from '../utils/helpers';
+import ClienteSearch from './ClienteSearch';
 
 interface CotizacionFormProps {
   cotizacion?: Cotizacion;
   onSubmit: (data: CotizacionFormData) => Promise<void>;
   onCancel: () => void;
   isLoading?: boolean;
+  onNavigateToClientes?: () => void;
 }
 
 const CotizacionForm: React.FC<CotizacionFormProps> = ({
   cotizacion,
   onSubmit,
   onCancel,
-  isLoading = false
+  isLoading = false,
+  onNavigateToClientes
 }) => {
   const [formData, setFormData] = useState<CotizacionFormData>({
     emisor_nombre: 'JGS SOLUCIONES TECNOLOGICAS',
@@ -24,6 +27,7 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
     emisor_contacto: 'JHON JAIRO GAMBIN SALAS',
     emisor_email: 'jgs.tecnologias@gmail.com',
     emisor_telefono: '3003990501',
+    cliente_id: undefined,
     cliente_nombre: '',
     cliente_nit: '',
     cliente_direccion: '',
@@ -45,6 +49,8 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
     items: []
   });
 
+  const [selectedCliente, setSelectedCliente] = useState<Cliente | null>(null);
+
   const [items, setItems] = useState<Item[]>([
     {
       descripcion: '',
@@ -65,6 +71,7 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
         emisor_contacto: cotizacion.emisor_contacto,
         emisor_email: cotizacion.emisor_email,
         emisor_telefono: cotizacion.emisor_telefono,
+        cliente_id: cotizacion.cliente_id,
         cliente_nombre: cotizacion.cliente_nombre,
         cliente_nit: cotizacion.cliente_nit,
         cliente_direccion: cotizacion.cliente_direccion,
@@ -135,6 +142,36 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
     }
   };
 
+  const handleSelectCliente = (cliente: Cliente) => {
+    setSelectedCliente(cliente);
+    setFormData(prev => ({
+      ...prev,
+      cliente_id: cliente.id,
+      cliente_nombre: cliente.nombre,
+      cliente_nit: cliente.nit,
+      cliente_direccion: cliente.direccion,
+      cliente_web: cliente.pagina_web || '',
+      cliente_contacto: cliente.contactos?.[0]?.nombre || cliente.nombre,
+      cliente_email: cliente.email,
+      cliente_telefono: cliente.telefono
+    }));
+  };
+
+  const handleClearCliente = () => {
+    setSelectedCliente(null);
+    setFormData(prev => ({
+      ...prev,
+      cliente_id: undefined,
+      cliente_nombre: '',
+      cliente_nit: '',
+      cliente_direccion: '',
+      cliente_web: '',
+      cliente_contacto: '',
+      cliente_email: '',
+      cliente_telefono: ''
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await onSubmit({ ...formData, items });
@@ -171,6 +208,19 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
           <div className="w-1 h-6 bg-primary-600 rounded-full"></div>
           Datos del Cliente
         </h3>
+        
+        {/* Buscador de clientes (solo en nueva cotización) */}
+        {!cotizacion && (
+          <div className="mb-6">
+            <ClienteSearch
+              onSelect={handleSelectCliente}
+              selectedCliente={selectedCliente}
+              onClear={handleClearCliente}
+              onCreateNew={onNavigateToClientes}
+            />
+          </div>
+        )}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">

@@ -14,8 +14,7 @@ echo.
 REM Verificar si Node.js está instalado
 where node >nul 2>&1
 if %errorlevel% neq 0 (
-    echo [ERROR] Node.js no está instalado. Por favor instálalo primero.
-    echo Descarga: https://nodejs.org
+    echo [ERROR] Node.js no esta instalado.
     pause
     exit /b 1
 )
@@ -23,40 +22,30 @@ echo [OK] Node.js detectado.
 
 echo.
 echo ================================================
-echo    INICIALIZANDO SISTEMA...
-echo ================================================
-echo.
-
-REM Verificar e inicializar base de datos y super usuario
-cd /d %SCRIPT_DIR%backend
-call npm run init
-
-echo.
-echo ================================================
 echo    INICIANDO SERVICIOS...
 echo ================================================
 echo.
 
-REM Ejecutar backend y frontend en paralelo y mantener ventanas abiertas
+REM Ejecutar backend
 start "Backend - Sistema de Cotizaciones" cmd /k "cd /d %SCRIPT_DIR%backend && title Backend - JGS && npm run dev"
 
-timeout /t 2 /nobreak >nul
+timeout /t 3 /nobreak >nul
 
+REM Ejecutar frontend
 start "Frontend - Sistema de Cotizaciones" cmd /k "cd /d %SCRIPT_DIR%frontend && title Frontend - JGS && npm run dev"
 
 echo.
 echo ================================================
-echo    SERVICIOS INICIADOS CORRECTAMENTE
+echo    SERVICIOS INICIADOS
 echo ================================================
 echo.
-echo [OK] Backend:    http://localhost:3000/api
-echo [OK] Frontend:   http://localhost:5173
+echo [OK] Backend: http://localhost:3000
+echo [OK] Frontend: http://localhost:5173
 echo.
 echo Credenciales:
 echo   Usuario: admin@jgs.com
 echo   Password: admin123
 echo.
-echo Las ventanas de comandos se mantendrán abiertas.
+echo Si hay errores, revisalos en las ventanas de comandos.
 echo.
-echo Presiona cualquier tecla para cerrar este mensaje...
-pause >nul
+pause

@@ -1,17 +1,18 @@
-# 💼 Sistema de Cotizaciones
+# 💼 Sistema de Cotizaciones y CRM
 
-![Versión](https://img.shields.io/badge/versión-1.0.0-blue)
+![Versión](https://img.shields.io/badge/versión-2.0.0-blue)
 ![Node.js](https://img.shields.io/badge/Node.js-18+-green)
 ![React](https://img.shields.io/badge/React-18.2-cyan)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-blue)
 
-Sistema de gestión de cotizaciones profesionales desarrollado por **JGS Soluciones Tecnológicas**. Permite crear, editar, eliminar y enviar cotizaciones a clientes de manera eficiente, con generación automática de PDFs y gestión de usuarios.
+Sistema de gestión de cotizaciones profesionales con módulo CRM integrado, desarrollado por **JGS Soluciones Tecnológicas**. Permite crear, editar, eliminar y enviar cotizaciones a clientes, con generación automática de PDFs, gestión de usuarios y seguimiento completo de clientes.
 
 ---
 
 ## 📋 Tabla de Contenidos
 
 - [✨ Características](#-características)
+- [🏢 Módulo CRM](#-módulo-crm)
 - [🛠️ Tecnologías](#️-tecnologías)
 - [📁 Estructura del Proyecto](#-estructura-del-proyecto)
 - [🚀 Instalación](#-instalación)
@@ -22,6 +23,33 @@ Sistema de gestión de cotizaciones profesionales desarrollado por **JGS Solucio
 - [🎨 Personalización](#-personalización)
 - [📞 Soporte](#-soporte)
 - [📄 Licencia](#-licencia)
+
+---
+
+---
+
+## 🏢 Módulo de Gestión de Clientes (CRM)
+
+El sistema incluye un módulo completo de CRM para gestionar tus clientes de manera eficiente.
+
+### 📋 Funcionalidades del CRM
+
+| Módulo | Descripción |
+|--------|-------------|
+| **Ficha del Cliente** | Datos principales: nombre, NIT, contacto, dirección |
+| **Contactos** | Múltiples contactos por empresa |
+| **Interacciones** | Historial de llamadas, emails, visitas, notas |
+| **Cotizaciones** | Ver cotizaciones asociadas directamente |
+| **Documentos** | Adjuntar RUT, cámara de comercio, contratos |
+
+### 📊 Clasificación de Clientes
+
+| Campo | Opciones |
+|--------|---------|
+| **Estado** | Prospecto | Activo | Inactivo | Moroso |
+| **Sector** | Comercio | Hotel | Salud | Puerto | Otro |
+| **Prioridad** | Alta | Media | Baja |
+| **Tamaño** | Pequeño | Mediano | Grande |
 
 ---
 
@@ -308,6 +336,22 @@ Accede a la aplicación con las credenciales por defecto:
 | POST | `/api/users` | Crear usuario |
 | PUT | `/api/users/:id` | Actualizar usuario |
 | DELETE | `/api/users/:id` | Eliminar usuario |
+
+### Clientes (CRM)
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/api/clientes` | Listar clientes (con filtros) |
+| GET | `/api/clientes/:id` | Ver cliente completo |
+| POST | `/api/clientes` | Crear cliente |
+| PUT | `/api/clientes/:id` | Editar cliente |
+| DELETE | `/api/clientes/:id` | Eliminar cliente |
+| GET | `/api/clientes/:id/contactos` | Ver contactos |
+| POST | `/api/clientes/:id/contactos` | Agregar contacto |
+| DELETE | `/api/clientes/:id/contactos/:cid` | Eliminar contacto |
+| GET | `/api/clientes/:id/interacciones` | Ver historial |
+| POST | `/api/clientes/:id/interacciones` | Registrar interacción |
+| DELETE | `/api/clientes/:id/interacciones/:iid` | Eliminar interacción |
 
 ---
 
