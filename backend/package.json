@@ -8,7 +8,8 @@
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "init-db": "node src/scripts/initDatabase.js",
-    "init-superuser": "node src/scripts/initSuperUser.js"
+    "init-superuser": "node src/scripts/initSuperUser.js",
+    "init": "node src/scripts/initSystem.js"
   },
   "keywords": [
     "cotizaciones",

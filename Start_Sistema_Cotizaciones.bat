@@ -23,6 +23,16 @@ echo [OK] Node.js detectado.
 
 echo.
 echo ================================================
+echo    INICIALIZANDO SISTEMA...
+echo ================================================
+echo.
+
+REM Verificar e inicializar base de datos y super usuario
+cd /d %SCRIPT_DIR%backend
+call npm run init
+
+echo.
+echo ================================================
 echo    INICIANDO SERVICIOS...
 echo ================================================
 echo.

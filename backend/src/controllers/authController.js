@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { Usuario } from '../models/index.js';
+import { logger } from '../services/loggerService.js';
 
 // Generate JWT token
 const generateToken = (usuario) => {
@@ -15,7 +16,10 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    logger.auth('INTENTO LOGIN', email, false);
+
     if (!email || !password) {
+      logger.warn('Login fallido - datos incompletos', email);
       return res.status(400).json({
         error: 'Datos incompletos',
         message: 'Email y contraseña son requeridos'
@@ -26,6 +30,7 @@ export const login = async (req, res) => {
     const usuario = await Usuario.findOne({ where: { email } });
 
     if (!usuario) {
+      logger.auth('LOGIN FALLIDO', email, false, 'Usuario no encontrado');
       return res.status(401).json({
         error: 'Credenciales inválidas',
         message: 'Email o contraseña incorrectos'
@@ -33,6 +38,7 @@ export const login = async (req, res) => {
     }
 
     if (!usuario.activo) {
+      logger.auth('LOGIN FALLIDO', email, false, 'Usuario desactivado');
       return res.status(401).json({
         error: 'Usuario desactivado',
         message: 'Su cuenta ha sido desactivada. Contacte al administrador.'
@@ -43,6 +49,7 @@ export const login = async (req, res) => {
     const passwordValido = await usuario.verificarPassword(password);
 
     if (!passwordValido) {
+      logger.auth('LOGIN FALLIDO', email, false, 'Contraseña incorrecta');
       return res.status(401).json({
         error: 'Credenciales inválidas',
         message: 'Email o contraseña incorrectos'
@@ -55,6 +62,8 @@ export const login = async (req, res) => {
     // Generate token
     const token = generateToken(usuario);
 
+    logger.auth('LOGIN EXITOSO', email, true, `Rol: ${usuario.rol}`);
+
     res.json({
       message: 'Inicio de sesión exitoso',
       data: {
@@ -63,7 +72,7 @@ export const login = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error en login:', error);
+    logger.error('Error en login', error);
     res.status(500).json({
       error: 'Error interno',
       message: 'Error al iniciar sesión'
@@ -78,7 +87,7 @@ export const getProfile = async (req, res) => {
       data: req.usuario.toJSON()
     });
   } catch (error) {
-    console.error('Error al obtener perfil:', error);
+    logger.error('Error al obtener perfil', error);
     res.status(500).json({
       error: 'Error interno',
       message: 'Error al obtener perfil'
@@ -90,6 +99,7 @@ export const getProfile = async (req, res) => {
 export const cambiarPassword = async (req, res) => {
   try {
     const { passwordActual, passwordNuevo } = req.body;
+    const email = req.usuario.email;
 
     if (!passwordActual || !passwordNuevo) {
       return res.status(400).json({
@@ -109,6 +119,7 @@ export const cambiarPassword = async (req, res) => {
     const passwordValido = await usuario.verificarPassword(passwordActual);
 
     if (!passwordValido) {
+      logger.warn('Cambio de contraseña fallido', `${email} - contraseña actual incorrecta`);
       return res.status(400).json({
         error: 'Contraseña incorrecta',
         message: 'La contraseña actual es incorrecta'
@@ -117,11 +128,12 @@ export const cambiarPassword = async (req, res) => {
 
     await usuario.update({ password: passwordNuevo });
 
+    logger.success('Contraseña actualizada', email);
     res.json({
       message: 'Contraseña actualizada exitosamente'
     });
   } catch (error) {
-    console.error('Error al cambiar contraseña:', error);
+    logger.error('Error al cambiar contraseña', error);
     res.status(500).json({
       error: 'Error interno',
       message: 'Error al cambiar contraseña'
@@ -139,9 +151,11 @@ export const getUsuarios = async (req, res) => {
       order: [['created_at', 'DESC']]
     });
 
+    logger.user('LISTADO USUARIOS', req.usuario.email, `Total: ${usuarios.length}`);
+
     res.json({ data: usuarios });
   } catch (error) {
-    console.error('Error al obtener usuarios:', error);
+    logger.error('Error al obtener usuarios', error);
     res.status(500).json({
       error: 'Error interno',
       message: 'Error al obtener usuarios'
@@ -164,6 +178,7 @@ export const crearUsuario = async (req, res) => {
     // Check if email already exists
     const existente = await Usuario.findOne({ where: { email } });
     if (existente) {
+      logger.warn('Creación de usuario fallida', `Email ${email} ya existe`);
       return res.status(400).json({
         error: 'Email duplicado',
         message: 'Ya existe un usuario con este email'
@@ -177,12 +192,13 @@ export const crearUsuario = async (req, res) => {
       rol: rol || 'usuario'
     });
 
+    logger.success('Usuario creado', `${email} | Rol: ${rol || 'usuario'} | Por: ${req.usuario.email}`);
     res.status(201).json({
       message: 'Usuario creado exitosamente',
       data: usuario.toJSON()
     });
   } catch (error) {
-    console.error('Error al crear usuario:', error);
+    logger.error('Error al crear usuario', error);
     if (error.name === 'SequelizeValidationError') {
       return res.status(400).json({
         error: 'Validación',
@@ -205,6 +221,7 @@ export const actualizarUsuario = async (req, res) => {
     const usuario = await Usuario.findByPk(id);
 
     if (!usuario) {
+      logger.warn('Actualización de usuario fallida', `ID ${id} no encontrado`);
       return res.status(404).json({
         error: 'No encontrado',
         message: 'Usuario no encontrado'
@@ -228,12 +245,13 @@ export const actualizarUsuario = async (req, res) => {
 
     await usuario.update(updateData);
 
+    logger.success('Usuario actualizado', `${email} | Por: ${req.usuario.email}`);
     res.json({
       message: 'Usuario actualizado exitosamente',
       data: usuario.toJSON()
     });
   } catch (error) {
-    console.error('Error al actualizar usuario:', error);
+    logger.error('Error al actualizar usuario', error);
     if (error.name === 'SequelizeUniqueConstraintError') {
       return res.status(400).json({
         error: 'Email duplicado',
@@ -253,6 +271,7 @@ export const eliminarUsuario = async (req, res) => {
     const { id } = req.params;
 
     if (parseInt(id) === req.usuario.id) {
+      logger.warn('Eliminación de usuario fallida', 'No puede eliminarse a sí mismo');
       return res.status(400).json({
         error: 'Operación no permitida',
         message: 'No puede eliminar su propia cuenta'
@@ -262,19 +281,22 @@ export const eliminarUsuario = async (req, res) => {
     const usuario = await Usuario.findByPk(id);
 
     if (!usuario) {
+      logger.warn('Eliminación de usuario fallida', `ID ${id} no encontrado`);
       return res.status(404).json({
         error: 'No encontrado',
         message: 'Usuario no encontrado'
       });
     }
 
+    const emailEliminado = usuario.email;
     await usuario.destroy();
 
+    logger.success('Usuario eliminado', `${emailEliminado} | Por: ${req.usuario.email}`);
     res.json({
       message: 'Usuario eliminado exitosamente'
     });
   } catch (error) {
-    console.error('Error al eliminar usuario:', error);
+    logger.error('Error al eliminar usuario', error);
     res.status(500).json({
       error: 'Error interno',
       message: 'Error al eliminar usuario'

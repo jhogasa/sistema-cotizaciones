@@ -70,6 +70,16 @@ const Cotizacion = sequelize.define('Cotizacion', {
     type: DataTypes.STRING(50),
     allowNull: false
   },
+  // Referencia al cliente del CRM
+  cliente_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: {
+      model: 'clientes',
+      key: 'id'
+    },
+    comment: 'Referencia al cliente del CRM'
+  },
   // Datos de la cotización
   fecha: {
     type: DataTypes.DATEONLY,
@@ -119,6 +129,15 @@ const Cotizacion = sequelize.define('Cotizacion', {
   estado: {
     type: DataTypes.ENUM('borrador', 'enviada', 'aceptada', 'rechazada', 'anulada'),
     defaultValue: 'borrador'
+  },
+  // Usuario que creó la cotización
+  usuario_id: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    references: {
+      model: 'usuarios',
+      key: 'id'
+    }
   }
 }, {
   tableName: 'cotizaciones',

@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import sequelize from '../config/database.js';
 import { enviarCotizacionEmail } from '../services/emailService.js';
 import { generarPDFCotizacionBuffer } from '../services/pdfService.js';
+import { logger } from '../services/loggerService.js';
 
 // Generar número de cotización consecutivo
 const generarNumeroCotizacion = async () => {
@@ -29,7 +30,7 @@ const calcularTotales = (items) => {
 
   return {
     subtotal: parseFloat(subtotal.toFixed(2)),
-    impuesto_valor: 0, // Puede calcularse según porcentaje
+    impuesto_valor: 0,
     total: parseFloat(subtotal.toFixed(2))
   };
 };
@@ -40,8 +41,12 @@ export const crearCotizacion = async (req, res) => {
   
   try {
     const { items, ...datosEmisor } = req.body;
+    const usuarioEmail = req.usuario.email;
+
+    logger.info('Intentando crear cotización', usuarioEmail);
 
     if (!items || items.length === 0) {
+      logger.warn('Creación fallida - sin items', usuarioEmail);
       return res.status(400).json({
         error: 'Debe incluir al menos un item en la cotización'
       });
@@ -57,7 +62,8 @@ export const crearCotizacion = async (req, res) => {
     const cotizacion = await Cotizacion.create({
       numero_cotizacion: numeroCotizacion,
       ...datosEmisor,
-      ...totales
+      ...totales,
+      usuario_id: req.usuario.id
     }, { transaction });
 
     // Crear items
@@ -84,6 +90,8 @@ export const crearCotizacion = async (req, res) => {
       }]
     });
 
+    logger.success('Cotización creada', `#${numeroCotizacion} | Cliente: ${datosEmisor.cliente_nombre} | Total: $${totales.total.toLocaleString()} | Por: ${usuarioEmail}`);
+    
     res.status(201).json({
       message: 'Cotización creada exitosamente',
       data: cotizacionCompleta
@@ -91,7 +99,7 @@ export const crearCotizacion = async (req, res) => {
 
   } catch (error) {
     await transaction.rollback();
-    console.error('Error al crear cotización:', error);
+    logger.error('Error al crear cotización', error);
     res.status(500).json({
       error: 'Error al crear la cotización',
       details: error.message
@@ -104,6 +112,7 @@ export const obtenerCotizaciones = async (req, res) => {
   try {
     const { page = 1, limit = 10, estado, search } = req.query;
     const offset = (page - 1) * limit;
+    const usuarioEmail = req.usuario.email;
 
     const where = {};
     
@@ -131,6 +140,8 @@ export const obtenerCotizaciones = async (req, res) => {
       offset: parseInt(offset)
     });
 
+    logger.cotizacion('LISTADO', 'todos', count, usuarioEmail);
+
     res.json({
       data: rows,
       pagination: {
@@ -142,7 +153,7 @@ export const obtenerCotizaciones = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al obtener cotizaciones:', error);
+    logger.error('Error al obtener cotizaciones', error);
     res.status(500).json({
       error: 'Error al obtener las cotizaciones',
       details: error.message
@@ -154,6 +165,7 @@ export const obtenerCotizaciones = async (req, res) => {
 export const obtenerCotizacionPorId = async (req, res) => {
   try {
     const { id } = req.params;
+    const usuarioEmail = req.usuario.email;
 
     const cotizacion = await Cotizacion.findByPk(id, {
       include: [{
@@ -164,17 +176,20 @@ export const obtenerCotizacionPorId = async (req, res) => {
     });
 
     if (!cotizacion) {
+      logger.warn('Cotización no encontrada', `ID: ${id} | Por: ${usuarioEmail}`);
       return res.status(404).json({
         error: 'Cotización no encontrada'
       });
     }
+
+    logger.cotizacion('CONSULTA', cotizacion.numero_cotizacion, cotizacion.cliente_nombre, usuarioEmail);
 
     res.json({
       data: cotizacion
     });
 
   } catch (error) {
-    console.error('Error al obtener cotización:', error);
+    logger.error('Error al obtener cotización', error);
     res.status(500).json({
       error: 'Error al obtener la cotización',
       details: error.message
@@ -189,14 +204,18 @@ export const actualizarCotizacion = async (req, res) => {
   try {
     const { id } = req.params;
     const { items, ...datosCotizacion } = req.body;
+    const usuarioEmail = req.usuario.email;
 
     const cotizacion = await Cotizacion.findByPk(id);
 
     if (!cotizacion) {
+      logger.warn('Actualización fallida - no encontrada', `ID: ${id} | Por: ${usuarioEmail}`);
       return res.status(404).json({
         error: 'Cotización no encontrada'
       });
     }
+
+    const numeroAnterior = cotizacion.numero_cotizacion;
 
     // Actualizar cotización
     if (items && items.length > 0) {
@@ -239,6 +258,8 @@ export const actualizarCotizacion = async (req, res) => {
       }]
     });
 
+    logger.success('Cotización actualizada', `#${numeroAnterior} | Cliente: ${cotizacion.cliente_nombre} | Total: $${cotizacion.total.toLocaleString()} | Por: ${usuarioEmail}`);
+
     res.json({
       message: 'Cotización actualizada exitosamente',
       data: cotizacionActualizada
@@ -246,7 +267,7 @@ export const actualizarCotizacion = async (req, res) => {
 
   } catch (error) {
     await transaction.rollback();
-    console.error('Error al actualizar cotización:', error);
+    logger.error('Error al actualizar cotización', error);
     res.status(500).json({
       error: 'Error al actualizar la cotización',
       details: error.message
@@ -258,23 +279,30 @@ export const actualizarCotizacion = async (req, res) => {
 export const eliminarCotizacion = async (req, res) => {
   try {
     const { id } = req.params;
+    const usuarioEmail = req.usuario.email;
 
     const cotizacion = await Cotizacion.findByPk(id);
 
     if (!cotizacion) {
+      logger.warn('Eliminación fallida - no encontrada', `ID: ${id} | Por: ${usuarioEmail}`);
       return res.status(404).json({
         error: 'Cotización no encontrada'
       });
     }
 
+    const numeroEliminado = cotizacion.numero_cotizacion;
+    const clienteEliminado = cotizacion.cliente_nombre;
+    
     await cotizacion.destroy();
+
+    logger.success('Cotización eliminada', `#${numeroEliminado} | Cliente: ${clienteEliminado} | Por: ${usuarioEmail}`);
 
     res.json({
       message: 'Cotización eliminada exitosamente'
     });
 
   } catch (error) {
-    console.error('Error al eliminar cotización:', error);
+    logger.error('Error al eliminar cotización', error);
     res.status(500).json({
       error: 'Error al eliminar la cotización',
       details: error.message
@@ -286,11 +314,12 @@ export const eliminarCotizacion = async (req, res) => {
 export const obtenerSiguienteNumero = async (req, res) => {
   try {
     const numeroSiguiente = await generarNumeroCotizacion();
+    logger.cotizacion('CONSULTA SIGUIENTE NÚMERO', numeroSiguiente, '', req.usuario.email);
     res.json({
       numero: numeroSiguiente
     });
   } catch (error) {
-    console.error('Error al obtener siguiente número:', error);
+    logger.error('Error al obtener siguiente número', error);
     res.status(500).json({
       error: 'Error al obtener el siguiente número',
       details: error.message
@@ -304,6 +333,7 @@ export const enviarCotizacion = async (req, res) => {
   
   try {
     const { id } = req.params;
+    const usuarioEmail = req.usuario.email;
 
     // Obtener cotización con sus items
     const cotizacion = await Cotizacion.findByPk(id, {
@@ -315,6 +345,7 @@ export const enviarCotizacion = async (req, res) => {
     });
 
     if (!cotizacion) {
+      logger.warn('Envío fallido - no encontrada', `ID: ${id} | Por: ${usuarioEmail}`);
       return res.status(404).json({
         error: 'Cotización no encontrada'
       });
@@ -322,6 +353,7 @@ export const enviarCotizacion = async (req, res) => {
 
     // Verificar que no esté aceptada, rechazada o anulada
     if (cotizacion.estado === 'aceptada' || cotizacion.estado === 'rechazada' || cotizacion.estado === 'anulada') {
+      logger.warn('Envío fallido - estado inválido', `#${cotizacion.numero_cotizacion} | Estado: ${cotizacion.estado} | Por: ${usuarioEmail}`);
       return res.status(400).json({
         error: `No se puede enviar una cotización en estado '${cotizacion.estado}'`
       });
@@ -339,6 +371,8 @@ export const enviarCotizacion = async (req, res) => {
 
     await transaction.commit();
 
+    logger.email('ENVIADA', cotizacion.cliente_email, cotizacion.numero_cotizacion, usuarioEmail);
+
     res.json({
       message: cotizacion.estado === 'borrador' ? 'Cotización enviada exitosamente por email' : 'Cotización reenviada exitosamente por email',
       data: {
@@ -351,7 +385,7 @@ export const enviarCotizacion = async (req, res) => {
 
   } catch (error) {
     await transaction.rollback();
-    console.error('Error al enviar cotización:', error);
+    logger.error('Error al enviar cotización', error);
     res.status(500).json({
       error: 'Error al enviar la cotización por email',
       details: error.message
