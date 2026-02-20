@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Edit2, Trash2, Download, FileText, Mail } from 'lucide-react';
+import { Eye, Edit2, Trash2, Download, FileText, Mail, CheckCircle, DollarSign, XCircle } from 'lucide-react';
 import type { Cotizacion } from '../types';
 import { formatCurrency, formatDate } from '../utils/helpers';
 
@@ -10,6 +10,9 @@ interface CotizacionListProps {
   onDelete: (id: number) => void;
   onDownloadPDF: (id: number, nombre: string) => void;
   onSendEmail: (id: number) => void;
+  onAccept?: (id: number) => void;
+  onReject?: (id: number) => void;
+  onRegisterPayment?: (id: number) => void;
   isLoading?: boolean;
 }
 
@@ -91,6 +94,9 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
   onDelete,
   onDownloadPDF,
   onSendEmail,
+  onAccept,
+  onReject,
+  onRegisterPayment,
   isLoading = false
 }) => {
   const [modal, setModal] = useState<{
@@ -249,6 +255,40 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
                           <Mail className="w-4 h-4" />
                         </button>
                       )}
+                      
+                      {/* Botón aceptar cotización */}
+                      {(cotizacion.estado === 'borrador' || cotizacion.estado === 'enviada') && onAccept && (
+                        <button
+                          onClick={() => onAccept(cotizacion.id!)}
+                          className="text-slate-600 hover:text-green-600 transition-colors"
+                          title="Marcar como aceptada"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {/* Botón rechazar cotización */}
+                      {(cotizacion.estado === 'borrador' || cotizacion.estado === 'enviada') && onReject && (
+                        <button
+                          onClick={() => onReject(cotizacion.id!)}
+                          className="text-slate-600 hover:text-red-600 transition-colors"
+                          title="Marcar como rechazada"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                      
+                      {/* Botón registrar pago - solo para cotizaciones aceptadas */}
+                      {cotizacion.estado === 'aceptada' && onRegisterPayment && (
+                        <button
+                          onClick={() => onRegisterPayment(cotizacion.id!)}
+                          className="text-slate-600 hover:text-green-600 transition-colors"
+                          title="Registrar pago"
+                        >
+                          <DollarSign className="w-4 h-4" />
+                        </button>
+                      )}
+                      
                       <button
                         onClick={() => handleDeleteClick(cotizacion.id!, cotizacion.numero_cotizacion)}
                         className="text-slate-600 hover:text-red-600 transition-colors"

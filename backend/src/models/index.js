@@ -6,6 +6,11 @@ import Cliente from './Cliente.js';
 import Contacto from './Contacto.js';
 import Interaccion from './Interaccion.js';
 import Documento from './Documento.js';
+import Pago from './Pago.js';
+import Movimiento from './Movimiento.js';
+import Proveedor from './Proveedor.js';
+import CuentaPorPagar from './CuentaPorPagar.js';
+import PagoProveedor from './PagoProveedor.js';
 
 // ============ ASOCIACIONES ============
 
@@ -53,6 +58,89 @@ Cotizacion.belongsTo(Cliente, {
   as: 'cliente' 
 });
 
+// ============ MÓDULO FINANCIERO ============
+
+// Cotizacion - Pagos (1:N)
+Cotizacion.hasMany(Pago, {
+  foreignKey: 'cotizacion_id',
+  as: 'pagos',
+  onDelete: 'CASCADE'
+});
+Pago.belongsTo(Cotizacion, {
+  foreignKey: 'cotizacion_id',
+  as: 'cotizacion'
+});
+
+// Cliente - Pagos (1:N)
+Cliente.hasMany(Pago, {
+  foreignKey: 'cliente_id',
+  as: 'pagos',
+  onDelete: 'CASCADE'
+});
+Pago.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+
+// Proveedor - CuentasPorPagar (1:N)
+Proveedor.hasMany(CuentaPorPagar, {
+  foreignKey: 'proveedor_id',
+  as: 'cuentas_por_pagar',
+  onDelete: 'CASCADE'
+});
+CuentaPorPagar.belongsTo(Proveedor, {
+  foreignKey: 'proveedor_id',
+  as: 'proveedor'
+});
+
+// CuentaPorPagar - PagosProveedor (1:N)
+CuentaPorPagar.hasMany(PagoProveedor, {
+  foreignKey: 'cuenta_por_pagar_id',
+  as: 'pagos',
+  onDelete: 'CASCADE'
+});
+PagoProveedor.belongsTo(CuentaPorPagar, {
+  foreignKey: 'cuenta_por_pagar_id',
+  as: 'cuenta_por_pagar'
+});
+
+// Proveedor - PagosProveedor (1:N)
+Proveedor.hasMany(PagoProveedor, {
+  foreignKey: 'proveedor_id',
+  as: 'pagos',
+  onDelete: 'CASCADE'
+});
+PagoProveedor.belongsTo(Proveedor, {
+  foreignKey: 'proveedor_id',
+  as: 'proveedor'
+});
+
+// Movimientos - Relaciones opcionales
+Movimiento.belongsTo(Cliente, {
+  foreignKey: 'cliente_id',
+  as: 'cliente'
+});
+Movimiento.belongsTo(Cotizacion, {
+  foreignKey: 'cotizacion_id',
+  as: 'cotizacion'
+});
+Movimiento.belongsTo(Pago, {
+  foreignKey: 'pago_id',
+  as: 'pago'
+});
+Movimiento.belongsTo(Proveedor, {
+  foreignKey: 'proveedor_id',
+  as: 'proveedor'
+});
+Movimiento.belongsTo(CuentaPorPagar, {
+  foreignKey: 'cuenta_por_pagar_id',
+  as: 'cuenta_por_pagar'
+});
+Movimiento.belongsTo(PagoProveedor, {
+  foreignKey: 'pago_proveedor_id',
+  as: 'pago_proveedor'
+});
+
 // ============ SINCRONIZACIÓN ============
 
 // Sincronizar modelos con la base de datos
@@ -75,7 +163,12 @@ export {
   Cliente,
   Contacto,
   Interaccion,
-  Documento
+  Documento,
+  Pago,
+  Movimiento,
+  Proveedor,
+  CuentaPorPagar,
+  PagoProveedor
 };
 
 // Exportar sequelize también

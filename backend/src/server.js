@@ -6,6 +6,8 @@ import { syncDatabase } from './models/index.js';
 import cotizacionesRoutes from './routes/cotizaciones.js';
 import clientesRoutes from './routes/clientes.js';
 import authRoutes from './routes/auth.js';
+import proveedoresRoutes from './routes/proveedores.js';
+import financieroRoutes from './routes/financiero.js';
 import { authMiddleware } from './middleware/auth.js';
 import { logRequests, logErrors } from './middleware/loggerMiddleware.js';
 import { logger } from './services/loggerService.js';
@@ -32,11 +34,13 @@ app.get('/', (req, res) => {
   logger.api('GET', '/', 200, 0);
   res.json({
     message: 'API de Cotizaciones - JGS Soluciones Tecnológicas',
-    version: '2.0.0',
+    version: '2.1.0',
     endpoints: {
       auth: '/api/auth',
       cotizaciones: '/api/cotizaciones',
       clientes: '/api/clientes',
+      proveedores: '/api/proveedores',
+      financiero: '/api/financiero',
       health: '/health'
     }
   });
@@ -56,6 +60,8 @@ app.use('/api/auth', authRoutes);
 // Protected routes - require authentication
 app.use('/api/cotizaciones', authMiddleware, cotizacionesRoutes);
 app.use('/api/clientes', authMiddleware, clientesRoutes);
+app.use('/api/proveedores', authMiddleware, proveedoresRoutes);
+app.use('/api/financiero', authMiddleware, financieroRoutes);
 
 // Manejo de errores 404
 app.use((req, res) => {

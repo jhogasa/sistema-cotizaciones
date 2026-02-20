@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, LogOut, Users, Shield, Key, Building, FileText } from 'lucide-react';
+import { Plus, Search, LogOut, Users, Shield, Key, Building, FileText, DollarSign } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
 import CotizacionList from './components/CotizacionList';
@@ -8,11 +8,14 @@ import LoginForm from './components/LoginForm';
 import UserManagement from './components/UserManagement';
 import ClienteList from './components/ClienteList';
 import ClienteForm from './components/ClienteForm';
+import DashboardFinanciero from './components/DashboardFinanciero';
+import PagoForm from './components/PagoForm';
 import { cotizacionesApi, authApi } from './services/api';
+import { financieroApi } from './services/financieroApi';
 import type { Cotizacion, CotizacionFormData, Usuario, ClienteFormData } from './types';
 import { downloadBlob } from './utils/helpers';
 
-type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password' | 'clientes-list' | 'clientes-create' | 'clientes-edit';
+type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password' | 'clientes-list' | 'clientes-create' | 'clientes-edit' | 'financiero-dashboard';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,12 +28,21 @@ function App() {
 
   // CRM State
   const [clienteActual, setClienteActual] = useState<ClienteFormData | undefined>();
-  const [currentSection, setCurrentSection] = useState<'cotizaciones' | 'clientes'>('cotizaciones');
+  const [currentSection, setCurrentSection] = useState<'cotizaciones' | 'clientes' | 'financiero'>('cotizaciones');
 
   // Change password state
   const [passwordActual, setPasswordActual] = useState('');
   const [passwordNuevo, setPasswordNuevo] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
+
+  // Payment state
+  const [pagoCotizacion, setPagoCotizacion] = useState<{
+    cotizacionId: number;
+    cotizacionNumero: string;
+    clienteNombre: string;
+    totalCotizacion: number;
+    totalPagado: number;
+  } | null>(null);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem('token');
@@ -179,6 +191,54 @@ function App() {
     }
   };
 
+  // Aceptar cotización
+  const handleAcceptCotizacion = async (id: number) => {
+    try {
+      setIsLoading(true);
+      await financieroApi.cambiarEstadoCotizacion(id, 'aceptada');
+      await cargarCotizaciones();
+      toast.success('Cotización marcada como aceptada');
+    } catch (error: any) {
+      console.error('Error al aceptar cotización:', error);
+      toast.error(error.response?.data?.error || 'Error al aceptar la cotización');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Rechazar cotización
+  const handleRejectCotizacion = async (id: number) => {
+    try {
+      setIsLoading(true);
+      await financieroApi.cambiarEstadoCotizacion(id, 'rechazada');
+      await cargarCotizaciones();
+      toast.success('Cotización marcada como rechazada');
+    } catch (error: any) {
+      console.error('Error al rechazar cotización:', error);
+      toast.error(error.response?.data?.error || 'Error al rechazar la cotización');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Abrir formulario de pago
+  const handleRegisterPayment = async (id: number) => {
+    try {
+      // Obtener info de la cotización y sus pagos
+      const data = await financieroApi.getPagosPorCotizacion(id);
+      setPagoCotizacion({
+        cotizacionId: id,
+        cotizacionNumero: data.cotizacion.numero_cotizacion,
+        clienteNombre: data.cotizacion.cliente_nombre,
+        totalCotizacion: data.cotizacion.total,
+        totalPagado: data.resumen.total_pagado
+      });
+    } catch (error: any) {
+      console.error('Error al obtener datos de pago:', error);
+      toast.error(error.response?.data?.error || 'Error al cargar datos de la cotización');
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -228,6 +288,11 @@ function App() {
   const handleNavigateToCotizaciones = () => {
     setCurrentSection('cotizaciones');
     setView('list');
+  };
+
+  const handleNavigateToFinanciero = () => {
+    setCurrentSection('financiero');
+    setView('financiero-dashboard');
   };
 
   const cotizacionesFiltradas = cotizaciones.filter(c =>
@@ -332,6 +397,17 @@ function App() {
                 <Building className="w-4 h-4" />
                 <span className="font-medium">Clientes</span>
               </button>
+              <button
+                onClick={handleNavigateToFinanciero}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  currentSection === 'financiero' 
+                    ? 'bg-white text-primary-800 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <DollarSign className="w-4 h-4" />
+                <span className="font-medium">Gestión Financiera</span>
+              </button>
             </nav>
 
             {/* User Menu */}
@@ -415,6 +491,9 @@ function App() {
               onDelete={handleDelete}
               onDownloadPDF={handleDownloadPDF}
               onSendEmail={handleSendEmail}
+              onAccept={handleAcceptCotizacion}
+              onReject={handleRejectCotizacion}
+              onRegisterPayment={handleRegisterPayment}
               isLoading={isLoading}
             />
           </div>
@@ -551,6 +630,30 @@ function App() {
           <ClienteForm
             onBack={() => setView('clientes-list')}
             onSaved={handleClienteSaved}
+          />
+        )}
+
+        {/* ============ VISTAS FINANCIERO ============ */}
+
+        {view === 'financiero-dashboard' && (
+          <DashboardFinanciero
+            onBack={handleNavigateToCotizaciones}
+          />
+        )}
+
+        {/* ============ MODAL PAGO COTIZACIÓN ============ */}
+        {pagoCotizacion && (
+          <PagoForm
+            cotizacionId={pagoCotizacion.cotizacionId}
+            cotizacionNumero={pagoCotizacion.cotizacionNumero}
+            clienteNombre={pagoCotizacion.clienteNombre}
+            totalCotizacion={pagoCotizacion.totalCotizacion}
+            totalPagado={pagoCotizacion.totalPagado}
+            onClose={() => setPagoCotizacion(null)}
+            onSaved={() => {
+              setPagoCotizacion(null);
+              cargarCotizaciones();
+            }}
           />
         )}
       </main>

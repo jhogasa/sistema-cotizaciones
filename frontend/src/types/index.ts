@@ -204,3 +204,72 @@ export interface Documento {
   mime_type?: string;
   usuario_id?: number;
 }
+
+// ============ MÓDULO FINANCIERO ============
+
+export interface Proveedor {
+  id?: number;
+  tipo: 'empresa' | 'persona' | 'tecnico_externo' | 'freelancer';
+  nombre: string;
+  nit_cedula: string;
+  telefono?: string;
+  email?: string;
+  direccion?: string;
+  ciudad?: string;
+  departamento?: string;
+  banco?: string;
+  tipo_cuenta?: 'ahorros' | 'corriente';
+  numero_cuenta?: string;
+  categoria?: string;
+  estado: 'activo' | 'inactivo';
+  notas?: string;
+  usuario_id?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface Movimiento {
+  id?: number;
+  tipo: 'ingreso' | 'egreso';
+  categoria: string;
+  subcategoria?: string;
+  monto: number;
+  fecha: string;
+  descripcion: string;
+  cliente_id?: number;
+  cliente?: Pick<Cliente, 'nombre'>;
+  cotizacion_id?: number;
+  proveedor_id?: number;
+  proveedor?: Pick<Proveedor, 'nombre'>;
+  proveedor_nombre?: string;
+  metodo_pago: 'efectivo' | 'transferencia' | 'cheque' | 'tarjeta' | 'otro';
+  numero_referencia?: string;
+  comprobante_url?: string;
+  usuario_id?: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface DashboardFinanciero {
+  resumen: {
+    ingresos: string;
+    egresos: string;
+    balance: string;
+    margen: number;
+  };
+  cuentas_por_cobrar: {
+    total: string;
+    cantidad: number;
+    lista: any[];
+  };
+  cuentas_por_pagar: {
+    total: string;
+    cantidad: number;
+    vencidas: {
+      cantidad: number;
+      total: string;
+    };
+    lista: any[];
+  };
+  ultimos_movimientos: Movimiento[];
+}
