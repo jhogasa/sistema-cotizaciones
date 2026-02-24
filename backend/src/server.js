@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { testConnection } from './config/database.js';
-import { syncDatabase } from './models/index.js';
+import { syncDatabase, Usuario } from './models/index.js';
 import cotizacionesRoutes from './routes/cotizaciones.js';
 import clientesRoutes from './routes/clientes.js';
 import authRoutes from './routes/auth.js';
@@ -11,6 +11,7 @@ import financieroRoutes from './routes/financiero.js';
 import { authMiddleware } from './middleware/auth.js';
 import { logRequests, logErrors } from './middleware/loggerMiddleware.js';
 import { logger } from './services/loggerService.js';
+import bcrypt from 'bcryptjs';
 
 dotenv.config();
 
@@ -98,6 +99,24 @@ const iniciarServidor = async () => {
     logger.info('Sincronizando modelos con la base de datos...');
     await syncDatabase(false);
     logger.success('Modelos sincronizados');
+
+    // Crear usuario admin si no existe
+    logger.info('Verificando usuario administrador...');
+    const adminExists = await Usuario.findOne({ where: { rol: 'admin' } });
+    if (!adminExists) {
+      logger.warn('No existe admin, creando uno nuevo...');
+      const hashedPassword = await bcrypt.hash('admin123', 10);
+      await Usuario.create({
+        nombre: 'Administrador',
+        email: 'admin@jgs.com',
+        password: hashedPassword,
+        rol: 'admin',
+        activo: true
+      });
+      logger.success('Usuario administrador creado: admin@jgs.com / admin123');
+    } else {
+      logger.success('Usuario administrador ya existe');
+    }
 
     // Iniciar servidor
     app.listen(PORT, () => {
