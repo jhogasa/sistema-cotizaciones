@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Wallet, AlertCircle, ArrowLeft, Plus, Filter, RefreshCw, Search } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Wallet, AlertCircle, ArrowLeft, Plus, Filter, RefreshCw } from 'lucide-react';
 import { financieroApi } from '../services/financieroApi';
 import MovimientoForm from './MovimientoForm';
 import type { DashboardFinanciero as DashboardData, Movimiento } from '../types';
