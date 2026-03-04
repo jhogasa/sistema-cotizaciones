@@ -15,7 +15,7 @@
 3. Configura:
    ```
    Name: sistema-cotizaciones-db
-   Database: railway
+   Database: railway_j1u0
    User: postgres
    ```
 4. Clic en **"Create Database"**
@@ -47,7 +47,7 @@
    | PORT | 10000 |
    | DB_HOST | [COPIA DEL POSTGRESQL] |
    | DB_PORT | 5432 |
-   | DB_NAME | railway |
+   | DB_NAME | railway_j1u0 |
    | DB_USER | postgres |
    | DB_PASSWORD | [COPIA DEL POSTGRESQL] |
    | JWT_SECRET | [Genera una clave larga y segura] |

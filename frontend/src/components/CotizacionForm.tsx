@@ -40,8 +40,8 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
     divisa: 'COP',
     forma_pago: 'Transferencia',
     subtotal: 0,
-    impuesto_porcentaje: 0,
-    impuesto_valor: 0,
+    iva_porcentaje: 19,
+    iva_valor: 0,
     total: 0,
     notas: ` `,
     condiciones: ` `,
@@ -57,6 +57,9 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
       cantidad: 1,
       precio_unitario: 0,
       descuento_porcentaje: 0,
+      aplica_iva: false,
+      iva_valor: 0,
+      total_sin_iva: 0,
       total: 0
     }
   ]);
@@ -84,8 +87,8 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
         divisa: cotizacion.divisa,
         forma_pago: cotizacion.forma_pago,
         subtotal: cotizacion.subtotal,
-        impuesto_porcentaje: cotizacion.impuesto_porcentaje,
-        impuesto_valor: cotizacion.impuesto_valor,
+        iva_porcentaje: cotizacion.iva_porcentaje,
+        iva_valor: cotizacion.iva_valor,
         total: cotizacion.total,
         notas: cotizacion.notas,
         condiciones: cotizacion.condiciones,
@@ -108,16 +111,20 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleItemChange = (index: number, field: keyof Item, value: string | number) => {
+  const handleItemChange = (index: number, field: keyof Item, value: string | number | boolean) => {
     const newItems = [...items];
     newItems[index] = { ...newItems[index], [field]: value };
     
-    if (field === 'cantidad' || field === 'precio_unitario' || field === 'descuento_porcentaje') {
-      newItems[index].total = calcularTotalItem(
+    if (field === 'cantidad' || field === 'precio_unitario' || field === 'descuento_porcentaje' || field === 'aplica_iva') {
+      const { total_sin_iva, iva_valor, total } = calcularTotalItem(
         newItems[index].cantidad,
         newItems[index].precio_unitario,
-        newItems[index].descuento_porcentaje
+        newItems[index].descuento_porcentaje,
+        newItems[index].aplica_iva || false
       );
+      newItems[index].total_sin_iva = total_sin_iva;
+      newItems[index].iva_valor = iva_valor;
+      newItems[index].total = total;
     }
     
     setItems(newItems);
@@ -131,6 +138,9 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
         cantidad: 1,
         precio_unitario: 0,
         descuento_porcentaje: 0,
+        aplica_iva: false,
+        iva_valor: 0,
+        total_sin_iva: 0,
         total: 0
       }
     ]);
@@ -474,16 +484,16 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
                   />
                 </div>
                 
-                <div className="md:col-span-3">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Total
+                <div className="md:col-span-3 flex items-center">
+                  <label className="flex items-center gap-2 cursor-pointer mt-4">
+                    <input
+                      type="checkbox"
+                      checked={item.aplica_iva || false}
+                      onChange={(e) => handleItemChange(index, 'aplica_iva', e.target.checked)}
+                      className="w-4 h-4 text-primary-600 rounded focus:ring-primary-500"
+                    />
+                    <span className="text-sm font-medium text-slate-700">IVA 19%</span>
                   </label>
-                  <input
-                    type="text"
-                    value={`$${item.total.toLocaleString('es-CO')}`}
-                    disabled
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-100 text-slate-700 font-semibold text-sm"
-                  />
                 </div>
               </div>
             </div>
@@ -500,9 +510,9 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
               </span>
             </div>
             <div className="flex items-center justify-between w-full md:w-80 text-sm">
-              <span className="text-slate-600">Impuesto (0%):</span>
+              <span className="text-slate-600">IVA  (19%):</span>
               <span className="font-semibold text-slate-900">
-                ${formData.impuesto_valor.toLocaleString('es-CO')}
+                ${formData.iva_valor.toLocaleString('es-CO')}
               </span>
             </div>
             <div className="flex items-center justify-between w-full md:w-80 text-lg border-t border-slate-200 pt-2">

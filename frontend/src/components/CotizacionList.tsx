@@ -9,7 +9,7 @@ interface CotizacionListProps {
   onEdit: (id: number) => void;
   onDelete: (id: number) => void;
   onDownloadPDF: (id: number, nombre: string) => void;
-  onSendEmail: (id: number) => void;
+  onSendEmail: (id: number, asunto?: string, mensaje?: string) => void;
   onAccept?: (id: number) => void;
   onReject?: (id: number) => void;
   onRegisterPayment?: (id: number) => void;
@@ -105,6 +105,8 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
     id?: number;
     title?: string;
     message?: string;
+    emailAsunto?: string;
+    emailMensaje?: string;
   }>({ isOpen: false, type: null });
 
   const handleDeleteClick = (id: number, numero: string) => {
@@ -117,14 +119,16 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
     });
   };
 
-  const handleEmailClick = (id: number, estado: string) => {
+  const handleEmailClick = (id: number, estado: string, numero: string) => {
     const accion = estado === 'borrador' ? 'Enviar' : 'Reenviar';
     setModal({
       isOpen: true,
       type: 'email',
       id,
-      title: `${accion} Cotización`,
-      message: `¿${accion} cotización por email al cliente?`
+      title: `${accion} Cotización por Email`,
+      message: `¿${accion} cotización #${numero} por email al cliente?`,
+      emailAsunto: `Cotización #${numero} - JGS Soluciones Tecnológicas`,
+      emailMensaje: ''
     });
   };
 
@@ -132,7 +136,7 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
     if (modal.type === 'delete' && modal.id) {
       onDelete(modal.id);
     } else if (modal.type === 'email' && modal.id) {
-      onSendEmail(modal.id);
+      onSendEmail(modal.id, modal.emailAsunto, modal.emailMensaje);
     }
     setModal({ isOpen: false, type: null });
   };
@@ -183,6 +187,9 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
                   Total
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
+                  IVA
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                   Estado
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
@@ -219,6 +226,11 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-slate-600">
+                      {cotizacion.iva_valor > 0 ? formatCurrency(cotizacion.iva_valor) : '-'}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${estadoColors[cotizacion.estado]}`}>
                       {estadoLabels[cotizacion.estado]}
                     </span>
@@ -248,7 +260,7 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
                       </button>
                       {(cotizacion.estado === 'borrador' || cotizacion.estado === 'enviada') && (
                         <button
-                          onClick={() => handleEmailClick(cotizacion.id!, cotizacion.estado)}
+                          onClick={() => handleEmailClick(cotizacion.id!, cotizacion.estado, cotizacion.numero_cotizacion)}
                           className="text-slate-600 hover:text-blue-600 transition-colors"
                           title={cotizacion.estado === 'borrador' ? 'Enviar por email' : 'Reenviar email'}
                         >
@@ -306,16 +318,61 @@ const CotizacionList: React.FC<CotizacionListProps> = ({
       </div>
 
       {/* Modal de confirmación */}
-      <Modal
-        isOpen={modal.isOpen}
-        title={modal.title || ''}
-        message={modal.message || ''}
-        onConfirm={handleModalConfirm}
-        onCancel={handleModalCancel}
-        confirmText={modal.type === 'delete' ? 'Eliminar' : 'Enviar'}
-        cancelText="Cancelar"
-        isDestructive={modal.type === 'delete'}
-      />
+      {modal.isOpen && modal.type === 'email' ? (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">{modal.title}</h3>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Asunto</label>
+                <input
+                  type="text"
+                  value={modal.emailAsunto || ''}
+                  onChange={(e) => setModal({ ...modal, emailAsunto: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Mensaje adicional (opcional)</label>
+                <textarea
+                  value={modal.emailMensaje || ''}
+                  onChange={(e) => setModal({ ...modal, emailMensaje: e.target.value })}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="Mensaje adicional que se agregará al correo..."
+                />
+              </div>
+            </div>
+            <div className="px-6 py-4 bg-slate-50 flex justify-end gap-3">
+              <button
+                onClick={handleModalCancel}
+                className="px-4 py-2 text-slate-600 hover:text-slate-800 font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleModalConfirm}
+                className="px-4 py-2 bg-primary-800 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors"
+              >
+                Enviar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Modal
+          isOpen={modal.isOpen}
+          title={modal.title || ''}
+          message={modal.message || ''}
+          onConfirm={handleModalConfirm}
+          onCancel={handleModalCancel}
+          confirmText={modal.type === 'delete' ? 'Eliminar' : 'Enviar'}
+          cancelText="Cancelar"
+          isDestructive={modal.type === 'delete'}
+        />
+      )}
     </>
   );
 };

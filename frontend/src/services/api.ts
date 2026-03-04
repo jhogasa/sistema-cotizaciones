@@ -121,8 +121,8 @@ export const cotizacionesApi = {
   },
 
   // Enviar cotización por email
-  sendEmail: async (id: number): Promise<ApiResponse<any>> => {
-    const response = await api.post<ApiResponse<any>>(`/cotizaciones/${id}/enviar`);
+  sendEmail: async (id: number, asunto?: string, mensaje?: string): Promise<ApiResponse<any>> => {
+    const response = await api.post<ApiResponse<any>>(`/cotizaciones/${id}/enviar`, { asunto, mensaje });
     return response.data;
   },
 };

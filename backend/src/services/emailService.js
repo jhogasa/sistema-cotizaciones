@@ -12,13 +12,14 @@ const createTransporter = () => {
 };
 
 // Generar contenido HTML del email
-const generarEmailHTML = (cotizacion) => {
+const generarEmailHTML = (cotizacion, mensajePersonalizado = null) => {
   const itemsHTML = cotizacion.items?.map(item => `
     <tr>
       <td style="padding: 12px; border: 1px solid #ddd;">${item.descripcion || item.nombre}</td>
       <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.cantidad}</td>
       <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">$${parseFloat(item.precio_unitario).toLocaleString('es-CO')}</td>
-      <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">$${parseFloat(item.total).toLocaleString('es-CO')}</td>
+      <td style="padding: 12px; border: 1px solid #ddd; text-align: center;">${item.aplica_iva ? `$${parseFloat(item.iva_valor || 0).toLocaleString('es-CO')}` : '-'}</td>
+      <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">$${parseFloat(item.total_sin_iva || 0).toLocaleString('es-CO')}</td>
     </tr>
   `).join('') || '';
 
@@ -124,6 +125,7 @@ const generarEmailHTML = (cotizacion) => {
               <th>Descripción</th>
               <th style="text-align: center;">Cantidad</th>
               <th style="text-align: right;">Precio Unitario</th>
+              <th style="text-align: center;">IVA</th>
               <th style="text-align: right;">Total</th>
             </tr>
           </thead>
@@ -132,23 +134,32 @@ const generarEmailHTML = (cotizacion) => {
           </tbody>
         </table>
         
-        <!-- Total -->
-        <p class="total">TOTAL: $${parseFloat(cotizacion.total).toLocaleString('es-CO')} ${cotizacion.divisa}</p>
-        
-        ${cotizacion.notas ? `
-          <h3 class="section-title">Notas</h3>
-          <p>${cotizacion.notas}</p>
-        ` : ''}
-        
-        ${cotizacion.condiciones ? `
-          <h3 class="section-title">Condiciones</h3>
-          <p>${cotizacion.condiciones}</p>
-        ` : ''}
+        <!-- Totales -->
+        <table style="width: 300px; margin-left: auto;">
+          <tr>
+            <td style="padding: 8px; text-align: right;"><strong>Subtotal:</strong></td>
+            <td style="padding: 8px; text-align: right;">$${parseFloat(cotizacion.subtotal || 0).toLocaleString('es-CO')}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px; text-align: right;"><strong>IVA 19%:</strong></td>
+            <td style="padding: 8px; text-align: right;">$${parseFloat(cotizacion.iva_valor || 0).toLocaleString('es-CO')}</td>
+          </tr>
+          <tr style="background-color: #005341; color: white;">
+            <td style="padding: 12px; text-align: right;"><strong>TOTAL:</strong></td>
+            <td style="padding: 12px; text-align: right;">$${parseFloat(cotizacion.total).toLocaleString('es-CO')} ${cotizacion.divisa}</td>
+          </tr>
+        </table>
+
+        ${mensajePersonalizado ? `<p>${mensajePersonalizado}</p>` : ''}
         
         <p>Por favor, no dude en contactarnos si tiene alguna pregunta o necesita más información.</p>
         
         <p>Atentamente,<br>
-        <strong>JGS SOLUCIONES TECNOLOGICAS</strong></p>
+        <strong>JHON JAIRO GAMBIN SALAS</strong><br>
+        Analista de Sistemas y Soporte Técnico<br>
+        jgs.tecnologias@gmail.com<br>
+        <strong>JGS SOLUCIONES TECNOLOGICAS</strong><br>
+        3003990501</p>
       </div>
       
       <div class="footer">
@@ -161,14 +172,16 @@ const generarEmailHTML = (cotizacion) => {
 };
 
 // Enviar cotización por email
-export const enviarCotizacionEmail = async (cotizacion, pdfBuffer) => {
+export const enviarCotizacionEmail = async (cotizacion, pdfBuffer, asuntoPersonalizado = null, mensajePersonalizado = null) => {
   const transporter = createTransporter();
+  
+  const asunto = asuntoPersonalizado || `Cotización #${cotizacion.numero_cotizacion} - JGS Soluciones Tecnológicas`;
   
   const mailOptions = {
     from: `"COTIZACION JGS Soluciones Tecnológicas" <${process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com'}>`,
     to: cotizacion.cliente_email,
-    subject: `Cotización #${cotizacion.numero_cotizacion} - JGS Soluciones Tecnológicas`,
-    html: generarEmailHTML(cotizacion),
+    subject: asunto,
+    html: generarEmailHTML(cotizacion, mensajePersonalizado),
     attachments: [
       {
         filename: `cotizacion_${cotizacion.numero_cotizacion}.pdf`,

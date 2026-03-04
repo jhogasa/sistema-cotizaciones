@@ -30,27 +30,39 @@ export const downloadBlob = (blob: Blob, filename: string): void => {
 export const calcularTotalItem = (
   cantidad: number,
   precioUnitario: number,
-  descuento: number
-): number => {
-  return cantidad * precioUnitario * (1 - descuento / 100);
+  descuento: number,
+  aplicaIva: boolean = false
+): { total_sin_iva: number; iva_valor: number; total: number } => {
+  const subtotalItem = cantidad * precioUnitario * (1 - descuento / 100);
+  const iva_valor = aplicaIva ? subtotalItem * 0.19 : 0;
+  const total = subtotalItem + iva_valor;
+  return { total_sin_iva: subtotalItem, iva_valor, total };
 };
 
 export const calcularTotalesCotizacion = (items: Array<{
   cantidad: number;
   precio_unitario: number;
   descuento_porcentaje: number;
+  aplica_iva?: boolean;
 }>) => {
-  const subtotal = items.reduce((sum, item) => {
-    return sum + calcularTotalItem(
+  let subtotal = 0;
+  let iva_valor = 0;
+  
+  items.forEach(item => {
+    const { total, iva_valor: ivaItem } = calcularTotalItem(
       item.cantidad,
       item.precio_unitario,
-      item.descuento_porcentaje
+      item.descuento_porcentaje,
+      item.aplica_iva || false
     );
-  }, 0);
+    subtotal += (total - ivaItem); // Subtotal sin IVA
+    iva_valor += ivaItem;
+  });
 
   return {
     subtotal,
-    impuesto_valor: 0,
-    total: subtotal,
+    iva_porcentaje: 19,
+    iva_valor,
+    total: subtotal + iva_valor,
   };
 };

@@ -54,7 +54,7 @@ const renderPDFContent = (doc, cotizacion) => {
 
   // --- LÍNEA DIVISORIA DINÁMICA ---
   y = Math.max(finalYEmisor, finalYCliente) + 20;
-  doc.strokeColor('#e2e8f0').lineWidth(1).moveTo(50, y).lineTo(562, y).stroke();
+  doc.strokeColor('#cceed5').lineWidth(1).moveTo(50, y).lineTo(562, y).stroke();
 
   // --- DATOS COTIZACIÓN ---
   y += 20;
@@ -74,16 +74,17 @@ const renderPDFContent = (doc, cotizacion) => {
   doc.rect(50, y, 512, 25).fill(colorPrimario);
   doc.fontSize(9).fillColor('#ffffff').font('Helvetica-Bold');
   doc.text('Items', 55, y + 8);
-  doc.text('Cant.', 340, y + 8, { width: 40, align: 'center' });
-  doc.text('Precio u', 380, y + 8, { width: 60, align: 'right' });
-  doc.text('Desc.', 445, y + 8, { width: 40, align: 'center' });
-  doc.text('Total', 490, y + 8, { width: 67, align: 'right' });
+  doc.text('Cant.', 320, y + 8, { width: 40, align: 'center' });
+  doc.text('Precio u', 365, y + 8, { width: 55, align: 'right' });
+  doc.text('Desc.', 425, y + 8, { width: 35, align: 'center' });
+  doc.text('IVA', 465, y + 8, { width: 50, align: 'center' });
+  doc.text('Total', 520, y + 8, { width: 42, align: 'center' });
 
   y += 30;
 
   doc.font('Helvetica').fillColor(colorTexto);
   cotizacion.items.forEach((item, index) => {
-    const itemHeight = Math.max(25, doc.heightOfString(item.descripcion, { width: 275 }) + 10);
+    const itemHeight = Math.max(25, doc.heightOfString(item.descripcion, { width: 250 }) + 10);
 
     if (y + itemHeight > 700) { doc.addPage(); y = 50; }
 
@@ -92,11 +93,12 @@ const renderPDFContent = (doc, cotizacion) => {
     }
 
     doc.fillColor(colorTexto).fontSize(8)
-       .text(item.descripcion, 55, y + 7, { width: 275 });
-    doc.text(item.cantidad.toString(), 340, y + 7, { width: 40, align: 'center' });
-    doc.text(`$${parseFloat(item.precio_unitario).toLocaleString('es-CO')}`, 380, y + 7, { width: 60, align: 'right' });
-    doc.text(`${item.descuento_porcentaje}%`, 445, y + 7, { width: 40, align: 'center' });
-    doc.text(`$${parseFloat(item.total).toLocaleString('es-CO')}`, 490, y + 7, { width: 67, align: 'right' });
+       .text(item.descripcion, 55, y + 7, { width: 250 });
+    doc.text(item.cantidad.toString(), 320, y + 7, { width: 40, align: 'center' });
+    doc.text(`$${parseFloat(item.precio_unitario).toLocaleString('es-CO')}`, 365, y + 7, { width: 55, align: 'right' });
+    doc.text(`${item.descuento_porcentaje}%`, 425, y + 7, { width: 35, align: 'center' });
+    doc.text(item.aplica_iva ? `$${parseFloat(item.iva_valor || 0).toLocaleString('es-CO')}` : '-', 465, y + 7, { width: 50, align: 'center' });
+    doc.text(`$${parseFloat(item.total_sin_iva || 0).toLocaleString('es-CO')}`, 520, y + 7, { width: 42, align: 'right' });
 
     y += itemHeight;
   });
@@ -115,7 +117,7 @@ const renderPDFContent = (doc, cotizacion) => {
   };
 
   printTotal('Subtotal', cotizacion.subtotal);
-  printTotal(`Impuesto ${cotizacion.impuesto_porcentaje}%`, cotizacion.impuesto_valor);
+  printTotal('IVA 19%', cotizacion.iva_valor);
   printTotal('Total', cotizacion.total, true, true);
 
   // --- NOTAS Y CONDICIONES ---

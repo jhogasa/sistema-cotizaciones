@@ -27,7 +27,7 @@ echo ================================================
 echo.
 
 REM Ejecutar backend
-start "Backend - Sistema de Cotizaciones" cmd /k "cd /d %SCRIPT_DIR%backend && title Backend - JGS && npm run dev"
+start "Backend - Sistema de Cotizaciones" cmd /k "cd /d %SCRIPT_DIR%backend && title Backend - JGS && npm start"
 
 timeout /t 3 /nobreak >nul
 
@@ -43,8 +43,8 @@ echo [OK] Backend: http://localhost:3000
 echo [OK] Frontend: http://localhost:5173
 echo.
 echo Credenciales:
-echo   Usuario: admin@jgs.com
-echo   Password: admin123
+echo   Admin: admin@jgs.com / admin123
+echo   O usa el usuario creado en Render
 echo.
 echo Si hay errores, revisalos en las ventanas de comandos.
 echo.

@@ -119,6 +119,7 @@ const CotizacionView: React.FC<CotizacionViewProps> = ({
                 <th className="px-4 py-3 text-center text-sm font-semibold w-20">Cant.</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold w-28">Precio u</th>
                 <th className="px-4 py-3 text-center text-sm font-semibold w-20">Desc.</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold w-20">IVA</th>
                 <th className="px-4 py-3 text-right text-sm font-semibold w-28">Total</th>
               </tr>
             </thead>
@@ -137,8 +138,11 @@ const CotizacionView: React.FC<CotizacionViewProps> = ({
                   <td className="px-4 py-3 text-sm text-center text-slate-700">
                     {item.descuento_porcentaje}%
                   </td>
+                  <td className="px-4 py-3 text-sm text-center text-slate-700">
+                    {item.aplica_iva ? formatCurrency(item.iva_valor) : '-' }
+                  </td>
                   <td className="px-4 py-3 text-sm text-right font-semibold text-slate-900">
-                    {formatCurrency(item.total)}
+                    {formatCurrency(item.total_sin_iva)}
                   </td>
                 </tr>
               ))}
@@ -157,10 +161,10 @@ const CotizacionView: React.FC<CotizacionViewProps> = ({
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-slate-600">
-                Impuesto {cotizacion.impuesto_porcentaje}%
+                IVA 19%
               </span>
               <span className="font-semibold text-slate-900">
-                {formatCurrency(cotizacion.impuesto_valor)}
+                {formatCurrency(cotizacion.iva_valor)}
               </span>
             </div>
             <div className="flex justify-between text-lg font-bold border-t border-slate-200 pt-2">

@@ -33,6 +33,21 @@ const Item = sequelize.define('Item', {
     type: DataTypes.DECIMAL(5, 2),
     defaultValue: 0
   },
+  aplica_iva: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+    comment: 'Indica si el item tiene IVA (19%)'
+  },
+  iva_valor: {
+    type: DataTypes.DECIMAL(12, 2),
+    defaultValue: 0,
+    comment: 'Valor del IVA calculado'
+  },
+  total_sin_iva: {
+    type: DataTypes.DECIMAL(12, 2),
+    defaultValue: 0,
+    comment: 'Total del item sin IVA'
+  },
   total: {
     type: DataTypes.DECIMAL(12, 2),
     allowNull: false

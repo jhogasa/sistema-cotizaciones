@@ -133,8 +133,8 @@ function LoginForm({ onLoginSuccess }: LoginFormProps) {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-slate-500 mt-6">
-          © 2026 JGS Soluciones Tecnológicas
+        <p className="text-center text-sm text-slate-300 mt-6">
+          © 2026 Desarrollado por Jhon Jairo Gambin Salas
         </p>
       </div>
     </div>

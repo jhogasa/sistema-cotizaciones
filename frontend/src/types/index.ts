@@ -4,6 +4,9 @@ export interface Item {
   cantidad: number;
   precio_unitario: number;
   descuento_porcentaje: number;
+  aplica_iva: boolean;
+  iva_valor: number;
+  total_sin_iva: number;
   total: number;
   orden?: number;
 }
@@ -39,8 +42,8 @@ export interface Cotizacion {
   
   // Totales
   subtotal: number;
-  impuesto_porcentaje: number;
-  impuesto_valor: number;
+  iva_porcentaje: number;
+  iva_valor: number;
   total: number;
   
   // Notas y condiciones

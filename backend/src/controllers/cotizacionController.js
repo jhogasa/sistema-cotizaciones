@@ -23,15 +23,21 @@ const generarNumeroCotizacion = async () => {
 
 // Calcular totales de la cotización
 const calcularTotales = (items) => {
-  const subtotal = items.reduce((sum, item) => {
-    const total = item.cantidad * item.precio_unitario * (1 - item.descuento_porcentaje / 100);
-    return sum + total;
-  }, 0);
+  let subtotal = 0;
+  let iva_valor = 0;
+  
+  items.forEach(item => {
+    const subtotalItem = item.cantidad * item.precio_unitario * (1 - (item.descuento_porcentaje || 0) / 100);
+    const ivaItem = item.aplica_iva ? subtotalItem * 0.19 : 0;
+    subtotal += subtotalItem;
+    iva_valor += ivaItem;
+  });
 
   return {
     subtotal: parseFloat(subtotal.toFixed(2)),
-    impuesto_valor: 0,
-    total: parseFloat(subtotal.toFixed(2))
+    iva_porcentaje: 19,
+    iva_valor: parseFloat(iva_valor.toFixed(2)),
+    total: parseFloat((subtotal + iva_valor).toFixed(2))
   };
 };
 
@@ -68,11 +74,15 @@ export const crearCotizacion = async (req, res) => {
 
     // Crear items
     const itemsConTotal = items.map((item, index) => {
-      const total = item.cantidad * item.precio_unitario * (1 - (item.descuento_porcentaje || 0) / 100);
+      const subtotalItem = item.cantidad * item.precio_unitario * (1 - (item.descuento_porcentaje || 0) / 100);
+      const iva_valor = item.aplica_iva ? subtotalItem * 0.19 : 0;
       return {
         ...item,
         cotizacion_id: cotizacion.id,
-        total: parseFloat(total.toFixed(2)),
+        aplica_iva: item.aplica_iva || false,
+        iva_valor: parseFloat(iva_valor.toFixed(2)),
+        total_sin_iva: parseFloat(subtotalItem.toFixed(2)),
+        total: parseFloat((subtotalItem + iva_valor).toFixed(2)),
         orden: index
       };
     });
@@ -333,6 +343,7 @@ export const enviarCotizacion = async (req, res) => {
   
   try {
     const { id } = req.params;
+    const { asunto, mensaje } = req.body;
     const usuarioEmail = req.usuario.email;
 
     // Obtener cotización con sus items
@@ -362,8 +373,8 @@ export const enviarCotizacion = async (req, res) => {
     // Generar PDF y obtener buffer
     const pdfBuffer = await generarPDFCotizacionBuffer(cotizacion.toJSON());
 
-    // Enviar email
-    await enviarCotizacionEmail(cotizacion.toJSON(), pdfBuffer);
+    // Enviar email con asunto y mensaje personalizado
+    await enviarCotizacionEmail(cotizacion.toJSON(), pdfBuffer, asunto, mensaje);
 
     // Actualizar estado a 'enviada' solo si estaba en borrador
     const nuevoEstado = cotizacion.estado === 'borrador' ? 'enviada' : cotizacion.estado;

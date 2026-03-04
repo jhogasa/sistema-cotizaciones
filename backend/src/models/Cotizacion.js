@@ -105,13 +105,15 @@ const Cotizacion = sequelize.define('Cotizacion', {
     allowNull: false,
     defaultValue: 0
   },
-  impuesto_porcentaje: {
+  iva_porcentaje: {
     type: DataTypes.DECIMAL(5, 2),
-    defaultValue: 0
+    defaultValue: 19,
+    comment: 'Porcentaje de IVA (por defecto 19%)'
   },
-  impuesto_valor: {
+  iva_valor: {
     type: DataTypes.DECIMAL(12, 2),
-    defaultValue: 0
+    defaultValue: 0,
+    comment: 'Valor total del IVA calculado'
   },
   total: {
     type: DataTypes.DECIMAL(12, 2),

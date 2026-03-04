@@ -177,10 +177,10 @@ function App() {
     }
   };
 
-  const handleSendEmail = async (id: number) => {
+  const handleSendEmail = async (id: number, asunto?: string, mensaje?: string) => {
     try {
       setIsLoading(true);
-      await cotizacionesApi.sendEmail(id);
+      await cotizacionesApi.sendEmail(id, asunto, mensaje);
       await cargarCotizaciones();
       toast.success('Cotización enviada exitosamente por email');
     } catch (error) {
@@ -661,7 +661,7 @@ function App() {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <p className="text-center text-sm text-slate-600">
+          <p className="text-center text-sm text-slate-300">
             © 2026 JGS Soluciones Tecnológicas - Sistema de Cotizaciones v1.0.0
           </p>
         </div>
