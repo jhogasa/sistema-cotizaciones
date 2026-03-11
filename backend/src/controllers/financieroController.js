@@ -362,12 +362,7 @@ export const getPagosPorCotizacion = async (req, res) => {
 
     const pagos = await Pago.findAll({
       where: { cotizacion_id: cotizacionId },
-      order: [['fecha_pago', 'DESC']],
-      include: [{
-        model: require('../models/index.js').Usuario,
-        as: 'usuario',
-        attributes: ['nombre', 'email']
-      }]
+      order: [['fecha_pago', 'DESC']]
     });
 
     const totalPagado = pagos.reduce((sum, p) => sum + parseFloat(p.monto), 0);
