@@ -368,13 +368,15 @@ export const getPagosPorCotizacion = async (req, res) => {
     const totalPagado = pagos.reduce((sum, p) => sum + parseFloat(p.monto), 0);
 
     res.json({
-      cotizacion,
-      pagos,
-      resumen: {
-        total_cotizacion: cotizacion.total,
-        total_pagado: totalPagado,
-        saldo_pendiente: parseFloat(cotizacion.total) - totalPagado,
-        esta_pagada: totalPagado >= parseFloat(cotizacion.total)
+      data: {
+        cotizacion,
+        pagos,
+        resumen: {
+          total_cotizacion: cotizacion.total,
+          total_pagado: totalPagado,
+          saldo_pendiente: parseFloat(cotizacion.total) - totalPagado,
+          esta_pagada: totalPagado >= parseFloat(cotizacion.total)
+        }
       }
     });
 
