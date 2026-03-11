@@ -12,6 +12,31 @@ const colorPrimario = '#005341';
 const colorSecundario = '#112211';
 const colorTexto = '#1e293b';
 
+// Función para limpiar texto de caracteres especiales
+const limpiarTexto = (texto) => {
+  if (!texto) return '';
+  // Reemplazar entidades HTML comunes
+  return texto
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&ntilde;/g, 'ñ')
+    .replace(/&Ntilde;/g, 'Ñ')
+    .replace(/&aacute;/g, 'á')
+    .replace(/&eacute;/g, 'é')
+    .replace(/&iacute;/g, 'í')
+    .replace(/&oacute;/g, 'ó')
+    .replace(/&uacute;/g, 'ú')
+    .replace(/&Aacute;/g, 'Á')
+    .replace(/&Eacute;/g, 'É')
+    .replace(/&Iacute;/g, 'Í')
+    .replace(/&Oacute;/g, 'Ó')
+    .replace(/&Uacute;/g, 'Ú');
+};
+
 // Función helper para renderizar el contenido del PDF
 const renderPDFContent = (doc, cotizacion) => {
   let y = 50;
@@ -123,12 +148,14 @@ const renderPDFContent = (doc, cotizacion) => {
   // --- NOTAS Y CONDICIONES ---
   const renderSeccion = (titulo, contenido) => {
     if (!contenido) return;
+    const contenidoLimpio = limpiarTexto(contenido);
+    if (!contenidoLimpio) return;
     y += 20;
     if (y + 50 > 750) { doc.addPage(); y = 50; }
     
     doc.fontSize(10).fillColor(colorSecundario).font('Helvetica-Bold').text(titulo, 50, y);
     y += 15;
-    doc.fontSize(8).fillColor(colorTexto).font('Helvetica').text(contenido, 50, y, { width: 512, align: 'justify' });
+    doc.fontSize(8).fillColor(colorTexto).font('Helvetica').text(contenidoLimpio, 50, y, { width: 512, align: 'justify' });
     y = doc.y;
   };
 
