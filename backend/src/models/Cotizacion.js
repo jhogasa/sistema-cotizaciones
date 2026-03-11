@@ -84,7 +84,16 @@ const Cotizacion = sequelize.define('Cotizacion', {
   fecha: {
     type: DataTypes.DATEONLY,
     allowNull: false,
-    defaultValue: DataTypes.NOW
+    defaultValue: DataTypes.NOW,
+    get() {
+      const value = this.getDataValue('fecha');
+      if (!value) return null;
+      // Retornar solo la fecha en formato YYYY-MM-DD
+      if (value instanceof Date) {
+        return value.toISOString().split('T')[0];
+      }
+      return value;
+    }
   },
   validez_oferta: {
     type: DataTypes.INTEGER,
