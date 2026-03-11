@@ -282,7 +282,7 @@ export default function DashboardFinanciero({ onBack }: Props) {
       </div>
 
       {/* Lista de Movimientos */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
           <h2 className="text-lg font-semibold text-slate-900">Movimientos</h2>
         </div>
@@ -300,22 +300,22 @@ export default function DashboardFinanciero({ onBack }: Props) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full divide-y divide-slate-200">
               <thead className="bg-slate-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Fecha</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Tipo</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Categoría</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Descripción</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Cliente/Proveedor</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Método</th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Monto</th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Acción</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fecha</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Categoría</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descripción</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Cliente/Proveedor</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Método</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Monto</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200">
+              <tbody className="bg-white divide-y divide-slate-200">
                 {movimientos.map((mov) => (
-                  <tr key={mov.id} className="hover:bg-slate-50">
+                  <tr key={mov.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {new Date(mov.fecha).toLocaleDateString('es-CO')}
                     </td>
