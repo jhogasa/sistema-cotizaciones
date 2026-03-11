@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, LogOut, Users, Shield, Key, Building, FileText, DollarSign } from 'lucide-react';
+import { Plus, Search, LogOut, Users, Shield, Key, Building, Building2, FileText, DollarSign } from 'lucide-react';
 import { Toaster, toast } from 'react-hot-toast';
 import CotizacionForm from './components/CotizacionForm';
 import CotizacionList from './components/CotizacionList';
@@ -8,6 +8,7 @@ import LoginForm from './components/LoginForm';
 import UserManagement from './components/UserManagement';
 import ClienteList from './components/ClienteList';
 import ClienteForm from './components/ClienteForm';
+import ProveedorList from './components/ProveedorList';
 import DashboardFinanciero from './components/DashboardFinanciero';
 import PagoForm from './components/PagoForm';
 import { cotizacionesApi, authApi } from './services/api';
@@ -15,7 +16,7 @@ import { financieroApi } from './services/financieroApi';
 import type { Cotizacion, CotizacionFormData, Usuario, ClienteFormData } from './types';
 import { downloadBlob } from './utils/helpers';
 
-type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password' | 'clientes-list' | 'clientes-create' | 'clientes-edit' | 'financiero-dashboard';
+type View = 'list' | 'create' | 'edit' | 'view' | 'users' | 'change-password' | 'clientes-list' | 'clientes-create' | 'clientes-edit' | 'proveedores-list' | 'financiero-dashboard';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -28,7 +29,7 @@ function App() {
 
   // CRM State
   const [clienteActual, setClienteActual] = useState<ClienteFormData | undefined>();
-  const [currentSection, setCurrentSection] = useState<'cotizaciones' | 'clientes' | 'financiero'>('cotizaciones');
+  const [currentSection, setCurrentSection] = useState<'cotizaciones' | 'clientes' | 'proveedores' | 'financiero'>('cotizaciones');
 
   // Change password state
   const [passwordActual, setPasswordActual] = useState('');
@@ -285,6 +286,11 @@ function App() {
     setView('clientes-list');
   };
 
+  const handleNavigateToProveedores = () => {
+    setCurrentSection('proveedores');
+    setView('proveedores-list');
+  };
+
   const handleNavigateToCotizaciones = () => {
     setCurrentSection('cotizaciones');
     setView('list');
@@ -396,6 +402,17 @@ function App() {
               >
                 <Building className="w-4 h-4" />
                 <span className="font-medium">Clientes</span>
+              </button>
+              <button
+                onClick={handleNavigateToProveedores}
+                className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                  currentSection === 'proveedores' 
+                    ? 'bg-white text-primary-800 shadow-sm' 
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                <span className="font-medium">Proveedores</span>
               </button>
               <button
                 onClick={handleNavigateToFinanciero}
@@ -615,6 +632,12 @@ function App() {
             onBack={handleNavigateToCotizaciones}
             onSelectCliente={handleSelectCliente}
             onCreate={() => setView('clientes-create')}
+          />
+        )}
+
+        {view === 'proveedores-list' && (
+          <ProveedorList
+            onClose={() => setView('list')}
           />
         )}
 

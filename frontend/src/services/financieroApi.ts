@@ -93,8 +93,8 @@ export const proveedoresApi = {
     tipo?: string;
     estado?: string;
     categoria?: string;
-  }): Promise<PaginatedResponse<Proveedor>> => {
-    const response = await api.get('/proveedores', { params });
+  }): Promise<{ data: Proveedor[]; pagination: any }> => {
+    const response = await api.get<{ data: Proveedor[]; pagination: any }>('/proveedores', { params });
     return response.data;
   },
 

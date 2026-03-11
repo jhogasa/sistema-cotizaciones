@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, DollarSign, TrendingUp, TrendingDown } from 'lucide-react';
+import { X, DollarSign, TrendingUp, TrendingDown, Plus } from 'lucide-react';
 import { financieroApi } from '../services/financieroApi';
 import { clientesApi } from '../services/clientesApi';
 import { proveedoresApi } from '../services/financieroApi';
@@ -50,8 +50,8 @@ export default function MovimientoForm({ onClose, onSaved }: Props) {
 
   const cargarClientes = async () => {
     try {
-      const response = await clientesApi.getAll({ search: busquedaCliente, limit: 10 });
-      setClientes(response.data);
+      const result = await clientesApi.getAll({ search: busquedaCliente, limit: 10 });
+      setClientes(result.data || []);
     } catch (error) {
       console.error('Error al cargar clientes:', error);
     }
@@ -59,8 +59,10 @@ export default function MovimientoForm({ onClose, onSaved }: Props) {
 
   const cargarProveedores = async () => {
     try {
-      const response = await proveedoresApi.getAll({ search: busquedaProveedor, limit: 10 });
-      setProveedores(response.data);
+      console.log('Buscando proveedores con:', busquedaProveedor);
+      const result = await proveedoresApi.getAll({ search: busquedaProveedor, limit: 10 });
+      console.log('Proveedores recibidos:', result);
+      setProveedores(result.data || []);
     } catch (error) {
       console.error('Error al cargar proveedores:', error);
     }
@@ -268,8 +270,8 @@ export default function MovimientoForm({ onClose, onSaved }: Props) {
                 placeholder="Buscar proveedor o escribir nombre..."
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-800 focus:border-transparent"
               />
-              {proveedores.length > 0 && busquedaProveedor && (
-                <div className="mt-2 border border-slate-200 rounded-lg max-h-40 overflow-y-auto">
+              {(proveedores.length > 0 || busquedaProveedor.length >= 2) && busquedaProveedor && (
+                <div className="mt-2 border border-slate-200 rounded-lg max-h-60 overflow-y-auto">
                   {proveedores.map(proveedor => (
                     <button
                       key={proveedor.id}
@@ -280,16 +282,55 @@ export default function MovimientoForm({ onClose, onSaved }: Props) {
                         setProveedorNombre('');
                         setProveedores([]);
                       }}
-                      className="w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors"
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors border-b border-slate-100"
                     >
                       <p className="font-medium text-slate-900">{proveedor.nombre}</p>
                       <p className="text-xs text-slate-500">{proveedor.nit_cedula}</p>
                     </button>
                   ))}
+                  {/* Opción para crear nuevo proveedor */}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const nombreProveedor = busquedaProveedor.trim();
+                      if (!nombreProveedor) {
+                        toast.error('Ingresa un nombre para el proveedor');
+                        return;
+                      }
+                      
+                      // Generar un NIT temporal (puede ser el mismo nombre si no tiene)
+                      const nitTemporal = nombreProveedor.toUpperCase().replace(/\s/g, '') + '-001';
+                      
+                      try {
+                        const nuevoProveedor = await proveedoresApi.create({
+                          tipo: 'empresa',
+                          nombre: nombreProveedor,
+                          nit_cedula: nitTemporal,
+                          estado: 'activo'
+                        });
+                        
+                        setProveedorId(nuevoProveedor.id!);
+                        setBusquedaProveedor(nuevoProveedor.nombre);
+                        setProveedorNombre('');
+                        setProveedores([]);
+                        toast.success('Proveedor creado y seleccionado');
+                      } catch (error: any) {
+                        console.error('Error al crear proveedor:', error);
+                        toast.error(error.response?.data?.message || 'Error al crear proveedor');
+                      }
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-green-50 transition-colors text-green-700 border-t border-slate-200"
+                  >
+                    <p className="font-medium flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Crear nuevo proveedor: "{busquedaProveedor}"
+                    </p>
+                    <p className="text-xs text-green-600">Se creará automáticamente con datos básicos</p>
+                  </button>
                 </div>
               )}
               <p className="mt-1 text-xs text-slate-500">
-                Puedes buscar un proveedor existente o escribir un nombre nuevo
+                Busca un proveedor existente o escribe un nombre para crear uno nuevo
               </p>
             </div>
           )}
