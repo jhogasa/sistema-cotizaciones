@@ -8,7 +8,13 @@ export const formatCurrency = (value: number): string => {
 };
 
 export const formatDate = (date: string | Date): string => {
-  const d = typeof date === 'string' ? new Date(date) : date;
+  // Si es string en formato YYYY-MM-DD, no convertir a Date para evitar problemas de timezone
+  if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+    const [year, month, day] = date.split('-');
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  }
+  // Para otros casos, usar el método original
+  const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date;
   return d.toLocaleDateString('es-CO', {
     year: 'numeric',
     month: '2-digit',

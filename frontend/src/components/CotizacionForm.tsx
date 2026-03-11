@@ -35,7 +35,7 @@ const CotizacionForm: React.FC<CotizacionFormProps> = ({
     cliente_contacto: '',
     cliente_email: '',
     cliente_telefono: '',
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: new Date().toLocaleDateString('en-CA'),
     validez_oferta: 5,
     divisa: 'COP',
     forma_pago: 'Transferencia',

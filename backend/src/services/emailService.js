@@ -2,6 +2,19 @@ import nodemailer from 'nodemailer';
 
 // Configuración del transporter de email
 const createTransporter = () => {
+  // Si hay API de Resend (producción en Render), usar Resend
+  if (process.env.RESEND_API_KEY) {
+    return nodemailer.createTransport({
+      host: 'smtp.resend.com',
+      port: 587,
+      secure: false,
+      auth: {
+        user: 'resend',
+        pass: process.env.RESEND_API_KEY
+      }
+    });
+  }
+  // Por defecto, usar Gmail (desarrollo local)
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -177,8 +190,15 @@ export const enviarCotizacionEmail = async (cotizacion, pdfBuffer, asuntoPersona
   
   const asunto = asuntoPersonalizado || `Cotización #${cotizacion.numero_cotizacion} - JGS Soluciones Tecnológicas`;
   
+  // Configurar remitente según el proveedor
+  const fromEmail = process.env.RESEND_API_KEY 
+    ? 'onboarding@resend.dev'  // Resend (prueba) o tu dominio verificado
+    : process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com';
+  
+  const fromName = 'COTIZACION JGS Soluciones Tecnológicas';
+  
   const mailOptions = {
-    from: `"COTIZACION JGS Soluciones Tecnológicas" <${process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com'}>`,
+    from: `"${fromName}" <${fromEmail}>`,
     to: cotizacion.cliente_email,
     subject: asunto,
     html: generarEmailHTML(cotizacion, mensajePersonalizado),
