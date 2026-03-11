@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, TrendingDown, Wallet, AlertCircle, ArrowLeft, Plus, Filter, RefreshCw } from 'lucide-react';
+import { DollarSign, TrendingUp, TrendingDown, Wallet, AlertCircle, ArrowLeft, Plus, Filter, RefreshCw, Eye, X } from 'lucide-react';
 import { financieroApi } from '../services/financieroApi';
 import MovimientoForm from './MovimientoForm';
 import type { DashboardFinanciero as DashboardData, Movimiento } from '../types';
@@ -14,6 +14,7 @@ export default function DashboardFinanciero({ onBack }: Props) {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showMovimientoForm, setShowMovimientoForm] = useState(false);
+  const [movimientoSeleccionado, setMovimientoSeleccionado] = useState<Movimiento | null>(null);
   
   // Filtros
   const [periodo, setPeriodo] = useState('todos');
@@ -309,6 +310,7 @@ export default function DashboardFinanciero({ onBack }: Props) {
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Cliente/Proveedor</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Método</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase">Monto</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-slate-500 uppercase">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
@@ -343,6 +345,15 @@ export default function DashboardFinanciero({ onBack }: Props) {
                     }`}>
                       {mov.tipo === 'ingreso' ? '+' : '-'}{formatCurrency(mov.monto)}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => setMovimientoSeleccionado(mov)}
+                        className="text-primary-800 hover:text-primary-600 p-1 rounded hover:bg-primary-50"
+                        title="Ver detalles"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -350,6 +361,92 @@ export default function DashboardFinanciero({ onBack }: Props) {
           </div>
         )}
       </div>
+
+      {/* Modal para ver detalles del movimiento */}
+      {movimientoSeleccionado && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-lg w-full">
+            <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-slate-900">Detalles del Movimiento</h3>
+              <button
+                onClick={() => setMovimientoSeleccionado(null)}
+                className="p-2 hover:bg-slate-100 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">Tipo:</span>
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  movimientoSeleccionado.tipo === 'ingreso' 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-red-100 text-red-800'
+                }`}>
+                  {movimientoSeleccionado.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">Fecha:</span>
+                <span className="text-slate-900 font-medium">
+                  {new Date(movimientoSeleccionado.fecha).toLocaleDateString('es-CO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-slate-600">Monto:</span>
+                <span className={`text-xl font-bold ${
+                  movimientoSeleccionado.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {movimientoSeleccionado.tipo === 'ingreso' ? '+' : '-'}
+                  {formatCurrency(movimientoSeleccionado.monto)}
+                </span>
+              </div>
+
+              <div className="border-t border-slate-200 pt-4">
+                <span className="text-slate-600 text-sm">Descripción:</span>
+                <p className="text-slate-900 mt-1">{movimientoSeleccionado.descripcion}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-slate-600 text-sm">Categoría:</span>
+                  <p className="text-slate-900 font-medium">{movimientoSeleccionado.categoria}</p>
+                </div>
+                <div>
+                  <span className="text-slate-600 text-sm">Método de Pago:</span>
+                  <p className="text-slate-900 font-medium capitalize">{movimientoSeleccionado.metodo_pago}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <span className="text-slate-600 text-sm">
+                    {movimientoSeleccionado.tipo === 'ingreso' ? 'Cliente:' : 'Proveedor:'}
+                  </span>
+                  <p className="text-slate-900 font-medium">
+                    {movimientoSeleccionado.cliente?.nombre || 
+                     movimientoSeleccionado.proveedor?.nombre || 
+                     movimientoSeleccionado.proveedor_nombre || 
+                     '-'}
+                  </p>
+                </div>
+                {movimientoSeleccionado.numero_referencia && (
+                  <div>
+                    <span className="text-slate-600 text-sm">Referencia:</span>
+                    <p className="text-slate-900 font-medium">{movimientoSeleccionado.numero_referencia}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
