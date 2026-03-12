@@ -186,38 +186,43 @@ const generarEmailHTML = (cotizacion, mensajePersonalizado = null) => {
 
 // Enviar cotización por email
 export const enviarCotizacionEmail = async (cotizacion, pdfBuffer, asuntoPersonalizado = null, mensajePersonalizado = null) => {
-  const transporter = createTransporter();
-  
-  const asunto = asuntoPersonalizado || `Cotización #${cotizacion.numero_cotizacion} - JGS Soluciones Tecnológicas`;
-  
-  // Configurar remitente según el proveedor
-  const fromEmail = process.env.RESEND_API_KEY 
-    ? 'onboarding@resend.dev'  // Resend (prueba) o tu dominio verificado
-    : process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com';
-  
-  const fromName = 'COTIZACION JGS Soluciones Tecnológicas';
-  
-  const mailOptions = {
-    from: `"${fromName}" <${fromEmail}>`,
-    to: cotizacion.cliente_email,
-    subject: asunto,
-    html: generarEmailHTML(cotizacion, mensajePersonalizado),
-    attachments: [
-      {
-        filename: `cotizacion_${cotizacion.numero_cotizacion}.pdf`,
-        content: pdfBuffer,
-        contentType: 'application/pdf'
-      }
-    ]
-  };
+  try {
+    const transporter = createTransporter();
+    
+    const asunto = asuntoPersonalizado || `Cotización #${cotizacion.numero_cotizacion} - JGS Soluciones Tecnológicas`;
+    
+    // Configurar remitente según el proveedor
+    const fromEmail = process.env.RESEND_API_KEY 
+      ? 'onboarding@resend.dev'  // Resend (prueba) o tu dominio verificado
+      : process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com';
+    
+    const fromName = 'COTIZACION JGS Soluciones Tecnológicas';
+    
+    const mailOptions = {
+      from: `"${fromName}" <${fromEmail}>`,
+      to: cotizacion.cliente_email,
+      subject: asunto,
+      html: generarEmailHTML(cotizacion, mensajePersonalizado),
+      attachments: [
+        {
+          filename: `cotizacion_${cotizacion.numero_cotizacion}.pdf`,
+          content: pdfBuffer,
+          contentType: 'application/pdf'
+        }
+      ]
+    };
 
-  const info = await transporter.sendMail(mailOptions);
-  
-  return {
-    success: true,
-    messageId: info.messageId,
-    recipient: cotizacion.cliente_email
-  };
+    const info = await transporter.sendMail(mailOptions);
+    
+    return {
+      success: true,
+      messageId: info.messageId,
+      recipient: cotizacion.cliente_email
+    };
+  } catch (error) {
+    console.error('Error en enviarCotizacionEmail:', error);
+    throw new Error(`Error al enviar email: ${error.message}`);
+  }
 };
 
 export default { enviarCotizacionEmail };

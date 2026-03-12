@@ -362,6 +362,14 @@ export const enviarCotizacion = async (req, res) => {
       });
     }
 
+    // Verificar que tenga email del cliente
+    if (!cotizacion.cliente_email) {
+      logger.warn('Envío fallido - sin email', `#${cotizacion.numero_cotizacion} | Por: ${usuarioEmail}`);
+      return res.status(400).json({
+        error: 'La cotización no tiene un email de cliente registrado'
+      });
+    }
+
     // Verificar que no esté aceptada, rechazada o anulada
     if (cotizacion.estado === 'aceptada' || cotizacion.estado === 'rechazada' || cotizacion.estado === 'anulada') {
       logger.warn('Envío fallido - estado inválido', `#${cotizacion.numero_cotizacion} | Estado: ${cotizacion.estado} | Por: ${usuarioEmail}`);
@@ -370,8 +378,12 @@ export const enviarCotizacion = async (req, res) => {
       });
     }
 
+    logger.info('Generando PDF...', `#${cotizacion.numero_cotizacion}`);
+    
     // Generar PDF y obtener buffer
     const pdfBuffer = await generarPDFCotizacionBuffer(cotizacion.toJSON());
+    
+    logger.info('Enviando email...', `#${cotizacion.numero_cotizacion} | Destino: ${cotizacion.cliente_email}`);
 
     // Enviar email con asunto y mensaje personalizado
     await enviarCotizacionEmail(cotizacion.toJSON(), pdfBuffer, asunto, mensaje);
