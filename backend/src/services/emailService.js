@@ -3,7 +3,12 @@ import nodemailer from 'nodemailer';
 // Configuración del transporter de email
 const createTransporter = () => {
   // Si hay API de Resend (producción en Render), usar Resend
+  console.log('=== DEBUG EMAIL ===');
+  console.log('RESEND_API_KEY existe:', !!process.env.RESEND_API_KEY);
+  console.log('RESEND_API_KEY valor:', process.env.RESEND_API_KEY ? '***presente***' : 'no existe');
+  
   if (process.env.RESEND_API_KEY) {
+    console.log('Usando RESEND para enviar email');
     return nodemailer.createTransport({
       host: 'smtp.resend.com',
       port: 587,
@@ -15,6 +20,7 @@ const createTransporter = () => {
     });
   }
   // Por defecto, usar Gmail (desarrollo local)
+  console.log('Usando GMAIL para enviar email');
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
