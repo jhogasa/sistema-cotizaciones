@@ -2,22 +2,10 @@ import nodemailer from 'nodemailer';
 
 // Configuración del transporter de email
 const createTransporter = () => {
-  // Si hay API de Resend (producción en Render), usar Resend
-  console.log('=== DEBUG EMAIL ===');
-  console.log('RESEND_API_KEY existe:', !!process.env.RESEND_API_KEY);
-  console.log('RESEND_API_KEY valor:', process.env.RESEND_API_KEY ? '***presente***' : 'no existe');
-  
+  // Si hay API de Resend (producción en Render), NO usar SMTP - usar API REST
   if (process.env.RESEND_API_KEY) {
-    console.log('Usando RESEND para enviar email');
-    return nodemailer.createTransport({
-      host: 'smtp.resend.com',
-      port: 587,
-      secure: false,
-      auth: {
-        user: 'resend',
-        pass: process.env.RESEND_API_KEY
-      }
-    });
+    console.log('Usando API RESEND (no SMTP)');
+    return null; // No usamos transporter para Resend
   }
   // Por defecto, usar Gmail (desarrollo local)
   console.log('Usando GMAIL para enviar email');
@@ -197,11 +185,54 @@ export const enviarCotizacionEmail = async (cotizacion, pdfBuffer, asuntoPersona
     
     const asunto = asuntoPersonalizado || `Cotización #${cotizacion.numero_cotizacion} - JGS Soluciones Tecnológicas`;
     
-    // Configurar remitente según el proveedor
-    const fromEmail = process.env.RESEND_API_KEY 
-      ? 'onboarding@resend.dev'  // Resend (prueba) o tu dominio verificado
-      : process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com';
+    // Si hay RESEND_API_KEY, usar API REST de Resend (evita SMTP)
+    if (process.env.RESEND_API_KEY) {
+      console.log('Enviando email via API RESEND...');
+      
+      // Convertir PDF buffer a base64
+      const pdfBase64 = pdfBuffer.toString('base64');
+      
+      // Configurar remitente
+      const fromEmail = 'onboarding@resend.dev';
+      const fromName = 'COTIZACION JGS Soluciones Tecnológicas';
+      
+      // Llamar a la API de Resend
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+        },
+        body: JSON.stringify({
+          from: `${fromName} <${fromEmail}>`,
+          to: [cotizacion.cliente_email],
+          subject: asunto,
+          html: generarEmailHTML(cotizacion, mensajePersonalizado),
+          attachments: [
+            {
+              filename: `cotizacion_${cotizacion.numero_cotizacion}.pdf`,
+              content: pdfBase64
+            }
+          ]
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(`Error de Resend: ${result.message}`);
+      }
+      
+      console.log('Email enviado exitosamente via RESEND:', result.id);
+      return {
+        success: true,
+        messageId: result.id,
+        recipient: cotizacion.cliente_email
+      };
+    }
     
+    // Por defecto, usar Gmail con nodemailer (desarrollo local)
+    const fromEmail = process.env.EMAIL_USER || 'jgs.tecnologias@gmail.com';
     const fromName = 'COTIZACION JGS Soluciones Tecnológicas';
     
     const mailOptions = {
