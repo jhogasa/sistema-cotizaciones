@@ -34,6 +34,11 @@ export default function DashboardFinanciero({ onBack }: Props) {
     cargarMovimientos();
   }, [periodo, mes, anio]);
 
+  // Logging para depuración
+  useEffect(() => {
+    console.log('Cantidad de movimientos cargados:', movimientos.length);
+  }, [movimientos]);
+
   const cargarDashboard = async () => {
     try {
       setIsLoading(true);
@@ -300,64 +305,66 @@ export default function DashboardFinanciero({ onBack }: Props) {
             </button>
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Categoría</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descripción</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Cliente/Proveedor</th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Método</th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Monto</th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-slate-200">
-                {movimientos.map((mov) => (
-                  <tr key={mov.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
-                      {new Date(mov.fecha).toLocaleDateString('es-CO')}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        mov.tipo === 'ingreso' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+          <div className="overflow-y-auto max-h-[500px]">
+            <table className="min-w-full divide-y divide-slate-200">
+              <thead className="bg-slate-50 sticky top-0 z-10">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Fecha</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Categoría</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Descripción</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Cliente/Proveedor</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Método</th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Monto</th>
+                  <th className="px-4 py-3 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-slate-200">
+                  {movimientos.map((mov) => (
+                    <tr key={mov.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
+                        {new Date(mov.fecha).toLocaleDateString('es-CO')}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                          mov.tipo === 'ingreso' 
+                            ? 'bg-green-100 text-green-800' 
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {mov.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
+                        {mov.categoria}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-slate-900 max-w-xs truncate" title={mov.descripcion}>
+                        {mov.descripcion}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
+                        {mov.cliente?.nombre || mov.proveedor?.nombre || mov.proveedor_nombre || '-'}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 capitalize">
+                        {mov.metodo_pago}
+                      </td>
+                      <td className={`px-4 py-3 whitespace-nowrap text-sm font-medium text-right ${
+                        mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'
                       }`}>
-                        {mov.tipo === 'ingreso' ? 'Ingreso' : 'Egreso'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
-                      {mov.categoria}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900 max-w-xs truncate" title={mov.descripcion}>
-                      {mov.descripcion}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600">
-                      {mov.cliente?.nombre || mov.proveedor?.nombre || mov.proveedor_nombre || '-'}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-slate-600 capitalize">
-                      {mov.metodo_pago}
-                    </td>
-                    <td className={`px-4 py-3 whitespace-nowrap text-sm font-medium text-right ${
-                      mov.tipo === 'ingreso' ? 'text-green-600' : 'text-red-600'
-                    }`}>
-                      {mov.tipo === 'ingreso' ? '+' : '-'}{formatCurrency(mov.monto)}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-center">
-                      <button
-                        onClick={() => setMovimientoSeleccionado(mov)}
-                        className="text-primary-800 hover:text-primary-600 p-1 rounded hover:bg-primary-50"
-                        title="Ver detalles"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        {mov.tipo === 'ingreso' ? '+' : '-'}{formatCurrency(mov.monto)}
+                      </td>
+                      <td className="px-4 py-3 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => setMovimientoSeleccionado(mov)}
+                          className="text-primary-800 hover:text-primary-600 p-1 rounded hover:bg-primary-50"
+                          title="Ver detalles"
+                        >
+                          <Eye className="w-5 h-5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+          </div>
         )}
       </div>
 
